@@ -132,6 +132,7 @@ export default function Simulate() {
   const [attackIntensity, setAttackIntensity] = useState(50) // slider 0-100
   const [qberHistory, setQberHistory] = useState([]) // {runId, qber, aborted}
   const [pnsStats, setPnsStats] = useState(null)
+  const [aiSummary, setAiSummary] = useState(null) // {text, source}
 
   // wsRef holds the live WebSocket so unmount can close it; aliveRef marks
   // whether the current connection should still drive state (StrictMode
@@ -187,6 +188,7 @@ export default function Simulate() {
     setSummary(null)
     setPnsStats(null)
     setRunInfo({ runId: null, transport: 'ws' })
+    setAiSummary(null)
     setError(null)
     setRunning(true)
 
@@ -210,6 +212,9 @@ export default function Simulate() {
       if (msg.type === 'stage') {
         applyStageMessage(msg)
       } else if (msg.type === 'done') {
+        if (msg.data?.ai_summary) {
+          setAiSummary({ text: msg.data.ai_summary, source: msg.data.summary_source })
+        }
         handleDone(msg.data, msg.run_id, 'ws')
       } else if (msg.type === 'error') {
         setError(msg.summary || 'simulation failed')
@@ -242,6 +247,7 @@ export default function Simulate() {
     setStageMap(new Map())
     setSummary(null)
     setPnsStats(null)
+    setAiSummary(null)
     setRunInfo({ runId: null, transport: 'rest' })
     setError(null)
     setRunning(true)
@@ -254,6 +260,9 @@ export default function Simulate() {
         attack_intensity: attackIntensity / 100,
       },
     })
+    if (data?.ai_summary) {
+      setAiSummary({ text: data.ai_summary, source: data.summary_source })
+    }
     if (!aliveRef.current) return
     if (!ok) {
       setError(data?.detail ? String(data.detail) : `HTTP ${status}`)
@@ -411,6 +420,15 @@ export default function Simulate() {
               </li>
             ))}
           </ol>
+
+          {aiSummary ? (
+            <div className="ai-note">
+              <p>{aiSummary.text}</p>
+              <span className="tag">
+                {aiSummary.source === 'llm' ? 'AI summary' : 'auto summary'}
+              </span>
+            </div>
+          ) : null}
 
           {pnsStats ? (
             <div className="pns-panel">

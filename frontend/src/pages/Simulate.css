@@ -228,6 +228,29 @@
   cursor: not-allowed;
 }
 
+/* ---- AI summary ------------------------------------------------------------ */
+.ai-note {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: var(--border-hairline);
+  border-left: 2px solid var(--live-500);
+  border-radius: var(--radius-sm);
+  background: var(--ink-900);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ai-note p {
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--text-hi);
+}
+
+.ai-note .tag {
+  align-self: flex-start;
+}
+
 /* ---- PNS decoy statistics -------------------------------------------------- */
 .pns-panel {
   margin-top: var(--space-3);

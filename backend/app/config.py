@@ -22,6 +22,14 @@ class Settings(BaseSettings):
     session_expire_days: int = 7
     session_cookie_name: str = "qkd_session"
 
+    # AI summaries (optional). Any OpenAI-compatible chat-completions API
+    # works: point OPENAI_BASE_URL elsewhere (Groq, Together, local vLLM, ...)
+    # and set OPENAI_MODEL accordingly. Empty key -> deterministic local
+    # fallback summaries are served instead.
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+    openai_base_url: str = "https://api.openai.com/v1"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

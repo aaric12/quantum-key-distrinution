@@ -35,6 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import auth
+from app.ai_summary import summarize_run
 from app.attacks import ATTACKS, make_hook
 from app.models import ProtocolStageLog, SimulationRun, get_db
 from app.protocols.b92 import B92Result, run_b92
@@ -82,10 +83,12 @@ class SimulationRunOut(BaseModel):
 class RunOut(SimulationRunOut):
     """POST response: persisted run summary, the full result payload, and the
     ordered stage messages (same shape the WebSocket streams, so clients can
-    render one timeline from either transport)."""
+    render one timeline from either transport), plus the AI summary."""
 
     result: dict
     stages: list[dict]
+    ai_summary: str | None = None
+    summary_source: str | None = None  # "llm" | "fallback"
 
 
 class StageMessage(BaseModel):
@@ -318,16 +321,19 @@ def _current_user_id_ws(ws: WebSocket, db: Session) -> int | None:
 @router.post(
     "/simulate/{protocol}", response_model=RunOut, status_code=status.HTTP_201_CREATED
 )
-def run_protocol_sync(
+async def run_protocol_sync(
     protocol: str,
     req: RunIn,
     db: DbDep,
     user: auth.CurrentUser,
 ) -> RunOut:
-    """Run the full pipeline once, persist it, and return every stage."""
+    """Run the full pipeline once, persist it, classify it, summarize it."""
     run_fn, result_type = _protocol_or_404(protocol)
     _validated(req)
-    result = run_fn(
+    # CPU-bound simulation runs off the event loop; the summary call below
+    # needs the loop for its async HTTP request.
+    result = await asyncio.to_thread(
+        run_fn,
         n_qubits=req.n_qubits,
         seed=req.seed,
         noise=req.noise,
@@ -339,11 +345,17 @@ def run_protocol_sync(
     run = persist_run(
         db, user_id=user.id, protocol=protocol, req=req, result=result, stage_msgs=stage_msgs
     )
+    ml_pred, ml_probs = _ml_view(result)
+    ai = await summarize_run(
+        _run_facts(protocol, result, req, ml_pred, ml_probs)
+    )
     out = SimulationRunOut.model_validate(run)
     return RunOut(
         **out.model_dump(),
         result=_result_to_dict(result),
         stages=[m.model_dump() for m in stage_msgs],
+        ai_summary=ai["summary"],
+        summary_source=ai["summary_source"],
     )
 
 
@@ -420,6 +432,8 @@ async def ws_protocol(
             result=result,
             stage_msgs=stage_msgs,
         )
+        ml_pred, ml_probs = _ml_view(result)
+        ai = await summarize_run(_run_facts(protocol, result, req, ml_pred, ml_probs))
         await ws.send_json(
             StageMessage(
                 type="done",
@@ -436,6 +450,8 @@ async def ws_protocol(
                     "final_key_length": len(result.final_key_alice),
                     "qber": result.qber,
                     "final_key_match": result.final_key_alice == result.final_key_bob,
+                    "ai_summary": ai["summary"],
+                    "summary_source": ai["summary_source"],
                 },
             ).model_dump()
         )
@@ -472,6 +488,42 @@ def list_runs(
         .scalars()
         .all()
     )
+
+
+def _ml_view(result: Any) -> tuple[str | None, dict[str, float] | None]:
+    """Best-effort ML classification of a finished run (None if untrained)."""
+    try:
+        from app.routers.ml import _classify
+
+        predicted, probabilities, _ = _classify(result)
+        return predicted, probabilities
+    except HTTPException:
+        return None, None  # classifier artifact missing: skip silently
+    except Exception:  # noqa: BLE001 — classification must never break a run
+        return None, None
+
+
+def _run_facts(
+    protocol: str,
+    result: Any,
+    req: RunIn,
+    ml_pred: str | None,
+    ml_probs: dict[str, float] | None,
+) -> dict[str, Any]:
+    """Compact fact sheet handed to the AI summarizer."""
+    return {
+        "protocol": protocol,
+        "n_qubits": req.n_qubits,
+        "qber": result.qber,
+        "attack_type": result.attack_type,
+        "attack_intensity": result.attack_intensity,
+        "aborted": result.aborted,
+        "abort_reason": result.abort_reason,
+        "sifted_count": len(result.sifted_alice),
+        "final_key_length": len(result.final_key_alice),
+        "ml_predicted_class": ml_pred,
+        "ml_probabilities": ml_probs,
+    }
 
 
 def _validated(req: RunIn) -> RunIn:

@@ -70,6 +70,7 @@ Then run the frontend dev server as above (`cd frontend && npm run dev`).
 | `DATABASE_URL` | backend | `postgresql+psycopg://qkd:qkd@localhost:5432/qkd` |
 | `JWT_SECRET` | backend | **required** — no default; the API refuses to start without it |
 | `VITE_API_BASE` | frontend | `http://localhost:8000` |
+| `OPENAI_API_KEY` | backend | *(empty)* — optional; enables LLM run summaries (any OpenAI-compatible API via `OPENAI_BASE_URL`/`OPENAI_MODEL`; without a key, deterministic fallback summaries are served) |
 
 CORS is pre-configured for `http://localhost:5173` / `4173`.
 
