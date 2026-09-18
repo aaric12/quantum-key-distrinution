@@ -1,0 +1,17 @@
+/* ---- ReportView (public read-only page) ---------------------------------- */
+.report-footer {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.report-footer a {
+  color: var(--live-500);
+  text-decoration: none;
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+}
+
+.report-footer a:hover {
+  text-decoration: underline;
+}

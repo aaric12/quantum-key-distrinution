@@ -137,6 +137,8 @@ export default function Simulate() {
   const [qberHistory, setQberHistory] = useState([]) // {runId, qber, aborted}
   const [pnsStats, setPnsStats] = useState(null)
   const [aiSummary, setAiSummary] = useState(null) // {text, source}
+  // Share: {creating, uuid, url, error} for the public report of the last run.
+  const [share, setShare] = useState(null)
 
   // ---- Real-hardware mode ----
   // mode: 'simulator' (default pipeline) | 'hardware' (real IBM backend).
@@ -209,6 +211,7 @@ export default function Simulate() {
   const runOverWebSocket = useCallback(() => {
     setStageMap(new Map())
     setSummary(null)
+    setShare(null)
     setPnsStats(null)
     setRunInfo({ runId: null, transport: 'ws' })
     setAiSummary(null)
@@ -269,6 +272,7 @@ export default function Simulate() {
   const runOverRest = useCallback(async () => {
     setStageMap(new Map())
     setSummary(null)
+    setShare(null)
     setPnsStats(null)
     setAiSummary(null)
     setRunInfo({ runId: null, transport: 'rest' })
@@ -324,6 +328,7 @@ export default function Simulate() {
     if (running || !ibmToken) return
     setStageMap(new Map())
     setSummary(null)
+    setShare(null)
     setAiSummary(null)
     setPnsStats(null)
     setRunInfo({ runId: null, transport: 'hw' })
@@ -376,6 +381,21 @@ export default function Simulate() {
       setRunning(false)
     }
   }, [running, ibmToken, nQubits, protocol])
+
+  /** Create the public, UUID-keyed report for the last completed run. */
+  const shareReport = useCallback(async () => {
+    if (!runInfo?.runId) return
+    setShare((s) => ({ ...(s || {}), creating: true, error: null }))
+    const { ok, status, data } = await api(`/reports/${runInfo.runId}`, {
+      method: 'POST',
+    })
+    if (!ok) {
+      setShare({ error: data?.detail ? String(data.detail) : `HTTP ${status}` })
+      return
+    }
+    // The frontend route renders the public ReportView for this uuid.
+    setShare({ uuid: data.uuid, url: `${window.location.origin}/reports/${data.uuid}` })
+  }, [runInfo])
 
   const qberPct = formatQber(summary?.qber)
   const aborted = Boolean(summary?.aborted)
@@ -605,6 +625,42 @@ export default function Simulate() {
               <span className="tag">
                 {aiSummary.source === 'llm' ? 'AI summary' : 'auto summary'}
               </span>
+            </div>
+          ) : null}
+
+          {runInfo?.runId && !running && mode === 'simulator' ? (
+            <div className="share-panel">
+              {share?.url ? (
+                <>
+                  <input
+                    className="input input--mono"
+                    readOnly
+                    value={share.url}
+                    onFocus={(e) => e.target.select()}
+                    aria-label="Public report link"
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    onClick={() => navigator.clipboard?.writeText(share.url)}
+                  >
+                    Copy link
+                  </button>
+                  <a className="btn btn--secondary" href={share.url} target="_blank" rel="noreferrer">
+                    Open
+                  </a>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={shareReport}
+                  disabled={share?.creating}
+                >
+                  {share?.creating ? 'Creating…' : 'Share'}
+                </button>
+              )}
+              {share?.error ? <p className="sim-error">{share.error}</p> : null}
             </div>
           ) : null}
 

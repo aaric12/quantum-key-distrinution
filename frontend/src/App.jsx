@@ -4,6 +4,7 @@ import Console from './pages/Console.jsx'
 import KeyRate from './pages/KeyRate.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import ReportView from './pages/ReportView.jsx'
 import Simulate from './pages/Simulate.jsx'
 import './App.css'
 
@@ -67,7 +68,8 @@ export default function App() {
                 <KeyRate />
               </RequireAuth>
             }
- />
+ />          {/* Public read-only report page — intentionally outside RequireAuth. */}
+          <Route path="/reports/:uuid" element={<ReportView />} />
           <Route
             path="/login"
             element={
@@ -75,7 +77,7 @@ export default function App() {
                 <Login />
               </RedirectIfAuthed>
             }
-          />
+ />
           <Route
             path="/register"
             element={

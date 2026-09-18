@@ -1,7 +1,7 @@
 // Thin fetch wrapper for the auth API. The JWT travels in an httpOnly cookie,
 // so no token ever touches JavaScript or localStorage.
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
+export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
 
 /** Base URL for WebSocket connections (http(s) -> ws(s)). */
 export function wsUrl(path) {

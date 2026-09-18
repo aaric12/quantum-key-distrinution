@@ -161,6 +161,33 @@ class HardwareJob(Base):
     )
 
 
+class Report(Base):
+    """A shareable, read-only snapshot of one simulation run.
+
+    Intentionally NOT linked to the users table: the row is keyed by an
+    unguessable UUID, readable by anyone who has the link, and deliberately
+    detached from user accounts (no user_id column, no cascade). Deleting a
+    user must not break shared report links.
+    """
+
+    __tablename__ = "reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    uuid: Mapped[str] = mapped_column(
+        String(36), nullable=False, unique=True, index=True
+    )
+    run_id: Mapped[int] = mapped_column(
+        ForeignKey("simulation_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow,
+    )
+
+
 class ProtocolStageLog(Base):
     """One completed stage of a simulation run, in execution order.
 
