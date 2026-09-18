@@ -31,7 +31,7 @@ export default function Register() {
     // Account created: log straight in (sets the httpOnly cookie + session row).
     const loginRes = await login(email, password)
     if (loginRes.ok) {
-      navigate('/', { replace: true })
+      navigate('/console', { replace: true })
     } else {
       navigate('/login', { replace: true })
     }

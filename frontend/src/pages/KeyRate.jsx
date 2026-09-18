@@ -210,7 +210,7 @@ export default function KeyRate() {
           </p>
         </div>
         <nav className="console-nav">
-          <a href="/">Console</a>
+          <a href="/">Guide</a><a href="/console">Console</a>
           <a href="/simulate">Simulate</a>
           <a href="/keyrate" className="active">
             Key rate

@@ -1,0 +1,63 @@
+/* ---- Glossary ------------------------------------------------------------ */
+.glossary {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.glossary__bar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.glossary__search {
+  max-width: 280px;
+}
+
+.glossary__list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.glossary__entry {
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.glossary__entry dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  color: var(--text-hi);
+}
+
+.glossary__entry dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+  line-height: 1.5;
+}
+
+.glossary__cat {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--grey-400);
+  color: var(--grey-400);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.glossary__cat--physics {
+  border-color: var(--live-500);
+  color: var(--live-500);
+}
+
+.glossary__cat--attack {
+  border-color: var(--abort-500);
+  color: var(--abort-500);
+}

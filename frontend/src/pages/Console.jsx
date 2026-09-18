@@ -44,7 +44,7 @@ export default function Console() {
         </div>
         <div className="topbar-user">
           <nav className="console-nav">
-            <Link to="/">Console</Link>
+            <Link to="/">Guide</Link><Link to="/console">Console</Link>
             <Link to="/simulate">Simulate</Link>
             <Link to="/keyrate">Key rate</Link>
           </nav>

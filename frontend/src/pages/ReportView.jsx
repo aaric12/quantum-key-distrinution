@@ -100,7 +100,7 @@ export default function ReportView() {
         <header className="console-topbar">
           <h1>Report</h1>
           <nav className="console-nav">
-            <Link to="/">Console</Link>
+            <Link to="/console">Console</Link>
           </nav>
         </header>
         <section className="card card--abort">
@@ -142,7 +142,7 @@ export default function ReportView() {
         <nav className="console-nav">
           {user ? (
             <>
-              <a href="/">Console</a>
+              <a href="/console">Console</a>
               <a href="/simulate">Simulate</a>
               <a href="/keyrate">Key rate</a>
               <button type="button" className="btn btn--secondary" onClick={onLogout}>

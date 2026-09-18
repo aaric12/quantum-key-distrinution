@@ -416,7 +416,7 @@ export default function Simulate() {
           </p>
         </div>
         <nav className="console-nav">
-          <a href="/">Console</a>
+          <a href="/">Guide</a><a href="/console">Console</a>
           <a href="/simulate" className="active">
             Simulate
           </a>
