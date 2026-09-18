@@ -426,3 +426,40 @@
   border-color: var(--live-500);
   color: var(--live-500);
 }
+
+/* ---- Hardware mode ------------------------------------------------------- */
+.input--mono {
+  font-family: var(--font-data);
+  letter-spacing: 0.04em;
+}
+
+.field__hint {
+  margin-top: var(--space-1);
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.api-key input {
+  width: 100%;
+}
+
+.hw-strip {
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.hw-strip__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-small);
+}
+
+.hw-readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-2);
+}

@@ -8,6 +8,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app import auth, models
 from app.routers import auth as auth_router
+from app.routers import hardware as hardware_router
 from app.routers import health
 from app.routers import ml as ml_router
 from app.routers import simulate as simulate_router
@@ -46,6 +47,9 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(auth_router.router, tags=["auth"])
+# hardware BEFORE simulate: its static path /simulate/hardware must win over
+# the dynamic /simulate/{protocol} route (registration order = match order).
+app.include_router(hardware_router.router, tags=["hardware"])
 app.include_router(simulate_router.router, tags=["simulate"])
 app.include_router(ml_router.router, tags=["ml"])
 

@@ -130,6 +130,37 @@ class SimulationRun(Base):
     )
 
 
+class HardwareJob(Base):
+    """A real-hardware execution request, owned by its user.
+
+    Security: the IBM Quantum token is deliberately NOT a column here (and
+    must never become one). The token lives only in request memory for the
+    instant needed to construct the runtime service; this row records the
+    handle (IBM job id) and public status so progress can be streamed.
+    """
+
+    __tablename__ = "hardware_jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    protocol: Mapped[str] = mapped_column(String(32), nullable=False)
+    ibm_job_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    backend_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    n_qubits: Mapped[int] = mapped_column(Integer, nullable=False)
+    shots: Mapped[int] = mapped_column(Integer, nullable=False, default=1024)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="queued")
+    result_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow
+    )
+
+
 class ProtocolStageLog(Base):
     """One completed stage of a simulation run, in execution order.
 

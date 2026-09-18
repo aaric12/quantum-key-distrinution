@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { api, wsUrl } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
+import ApiKeyInput from '../components/ApiKeyInput.jsx'
 import './Simulate.css'
+
+const HW_MIN_QUBITS = 20
+const HW_MAX_QUBITS = 50
 
 const STAGE_ORDER = [
   'alice_encode',
@@ -134,6 +138,19 @@ export default function Simulate() {
   const [pnsStats, setPnsStats] = useState(null)
   const [aiSummary, setAiSummary] = useState(null) // {text, source}
 
+  // ---- Real-hardware mode ----
+  // mode: 'simulator' (default pipeline) | 'hardware' (real IBM backend).
+  const [mode, setMode] = useState('simulator')
+  // ibmToken lives ONLY here, in transient React state. It is never written
+  // to localStorage/sessionStorage/cookies anywhere in this app, never
+  // pre-filled, and cleared immediately after the request consumes it.
+  const [ibmToken, setIbmToken] = useState('')
+  const [hwStatus, setHwStatus] = useState(null) // queued | running | done | failed
+  const [hwResult, setHwResult] = useState(null)
+  const [hwError, setHwError] = useState(null)
+  const [hwBackend, setHwBackend] = useState(null)
+  const hwWsRef = useRef(null)
+
   // wsRef holds the live WebSocket so unmount can close it; aliveRef marks
   // whether the current connection should still drive state (StrictMode
   // mounts effects twice in dev — stale sockets must be ignored).
@@ -154,6 +171,12 @@ export default function Simulate() {
         wsRef.current.close()
         wsRef.current = null
       }
+      if (hwWsRef.current) {
+        hwWsRef.current.close()
+        hwWsRef.current = null
+      }
+      // Unmount: the token existed only for an in-flight request — drop it.
+      setIbmToken('')
     }
   }, [loadHistory])
 
@@ -292,6 +315,68 @@ export default function Simulate() {
     runOverWebSocket() // falls back? no — a dedicated button covers REST
   }
 
+  /**
+   * Real-hardware path. The token is sent once in the POST body and wiped
+   * from state immediately after the fetch call is made. Progress arrives
+   * over /ws/hardware/{job_id}; the token is never part of that exchange.
+   */
+  const runOnHardware = useCallback(async () => {
+    if (running || !ibmToken) return
+    setStageMap(new Map())
+    setSummary(null)
+    setAiSummary(null)
+    setPnsStats(null)
+    setRunInfo({ runId: null, transport: 'hw' })
+    setError(null)
+    setHwError(null)
+    setHwStatus('submitting')
+    setHwResult(null)
+    setHwBackend(null)
+    setRunning(true)
+
+    const n = Number(nQubits) || HW_MIN_QUBITS
+    const { ok, status, data } = await api('/simulate/hardware', {
+      method: 'POST',
+      body: {
+        protocol,
+        n_qubits: Math.min(HW_MAX_QUBITS, Math.max(HW_MIN_QUBITS, n)),
+        shots: 1024,
+        ibm_token: ibmToken,
+      },
+    })
+    // The request has consumed the token — its memory lifetime ends here.
+    setIbmToken('')
+    if (!aliveRef.current) return
+    if (!ok) {
+      setHwStatus(null)
+      setHwError(data?.detail ? String(data.detail) : `HTTP ${status}`)
+      setRunning(false)
+      return
+    }
+    setHwBackend(data.backend)
+    setHwStatus(data.status || 'queued')
+
+    const ws = new WebSocket(wsUrl(`/ws/hardware/${data.job_id}`))
+    hwWsRef.current = ws
+    ws.onmessage = (event) => {
+      if (!aliveRef.current || ws !== hwWsRef.current) return
+      const msg = JSON.parse(event.data)
+      setHwStatus(msg.status)
+      if (msg.backend) setHwBackend(msg.backend)
+      if (msg.result) setHwResult(msg.result)
+      if (msg.error) setHwError(msg.error)
+      if (msg.status === 'done' || msg.status === 'failed') {
+        setRunning(false)
+        ws.close()
+      }
+    }
+    ws.onerror = () => {
+      if (!aliveRef.current || ws !== hwWsRef.current) return
+      setHwError('hardware status socket failed — check the API server')
+      setRunning(false)
+    }
+  }, [running, ibmToken, nQubits, protocol])
+
   const qberPct = formatQber(summary?.qber)
   const aborted = Boolean(summary?.aborted)
   const rows = buildRows(stageMap, STAGE_LABELS[protocol])
@@ -326,11 +411,40 @@ export default function Simulate() {
           <div className="card__head">
             <h2>BB84 run</h2>
             <span className="tag">
-              {runInfo?.transport === 'ws' ? 'websocket' : runInfo?.transport === 'rest' ? 'rest' : 'idle'}
+              {mode === 'hardware'
+                ? 'ibm quantum'
+                : runInfo?.transport === 'ws'
+                  ? 'websocket'
+                  : runInfo?.transport === 'rest'
+                    ? 'rest'
+                    : 'idle'}
             </span>
           </div>
 
           <div className="sim-controls">
+            <div className="field">
+              <label className="field__label" htmlFor="mode">
+                Target
+              </label>
+              <div className="controls" style={{ marginTop: 0 }}>
+                <button
+                  type="button"
+                  className={`btn ${mode === 'simulator' ? 'btn--primary' : 'btn--secondary'}`}
+                  onClick={() => setMode('simulator')}
+                  disabled={running}
+                >
+                  Simulator
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${mode === 'hardware' ? 'btn--primary' : 'btn--secondary'}`}
+                  onClick={() => setMode('hardware')}
+                  disabled={running}
+                >
+                  Real IBM hardware
+                </button>
+              </div>
+            </div>
             <div className="field">
               <label className="field__label" htmlFor="protocol">
                 Protocol
@@ -352,6 +466,7 @@ export default function Simulate() {
             <div className="field">
               <label className="field__label" htmlFor="nqubits">
                 Qubits
+                {mode === 'hardware' ? ` (${HW_MIN_QUBITS}–${HW_MAX_QUBITS} on hardware)` : ''}
               </label>
               <input
                 id="nqubits"
@@ -362,64 +477,127 @@ export default function Simulate() {
                 disabled={running}
               />
             </div>
-            <button type="button" className="btn btn--primary" onClick={onRun} disabled={running}>
-              {running ? 'Running…' : 'Run BB84'}
-            </button>
-            <div className="field">
-              <label className="field__label" htmlFor="attack">
-                Attack
-              </label>
-              <select
-                id="attack"
-                className="input"
-                value={attackType}
-                onChange={(e) => setAttackType(e.target.value)}
-                disabled={running}
-              >
-                <option value="none">none (ideal channel)</option>
-                <option value="intercept_resend">intercept-resend</option>
-                <option value="pns">PNS (decoy states)</option>
-                <option value="trojan">trojan-horse (model)</option>
-              </select>
-            </div>
-            <div className="field field--wide">
-              <label className="field__label" htmlFor="intensity">
-                Intensity <span className="data">{attackIntensity}%</span>
-              </label>
-              <input
-                id="intensity"
-                className="range"
-                type="range"
-                min="0"
-                max="100"
-                value={attackIntensity}
-                onChange={(e) => setAttackIntensity(Number(e.target.value))}
+            {mode === 'hardware' ? (
+              <ApiKeyInput
+                label="IBM Quantum API token"
+                hint={`Memory only — never stored, never sent anywhere except this run's request. Hardware accepts ${HW_MIN_QUBITS}–${HW_MAX_QUBITS} qubits.`}
+                value={ibmToken}
+                onChange={setIbmToken}
+                onEnter={runOnHardware}
                 disabled={running}
               />
-            </div>
-            <button type="button" className="btn btn--secondary" onClick={runOverRest} disabled={running}>
-              Run via REST
-            </button>
+            ) : null}
+            {mode === 'simulator' ? (
+              <>
+                <button type="button" className="btn btn--primary" onClick={onRun} disabled={running}>
+                  {running ? 'Running…' : 'Run BB84'}
+                </button>
+                <div className="field">
+                  <label className="field__label" htmlFor="attack">
+                    Attack
+                  </label>
+                  <select
+                    id="attack"
+                    className="input"
+                    value={attackType}
+                    onChange={(e) => setAttackType(e.target.value)}
+                    disabled={running}
+                  >
+                    <option value="none">none (ideal channel)</option>
+                    <option value="intercept_resend">intercept-resend</option>
+                    <option value="pns">PNS (decoy states)</option>
+                    <option value="trojan">trojan-horse (model)</option>
+                  </select>
+                </div>
+                <div className="field field--wide">
+                  <label className="field__label" htmlFor="intensity">
+                    Intensity <span className="data">{attackIntensity}%</span>
+                  </label>
+                  <input
+                    id="intensity"
+                    className="range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={attackIntensity}
+                    onChange={(e) => setAttackIntensity(Number(e.target.value))}
+                    disabled={running}
+                  />
+                </div>
+                <button type="button" className="btn btn--secondary" onClick={runOverRest} disabled={running}>
+                  Run via REST
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={runOnHardware}
+                disabled={running || !ibmToken}
+              >
+                {running ? 'On hardware…' : 'Run on IBM hardware'}
+              </button>
+            )}
           </div>
 
-          <ol className="timeline" style={{ marginTop: 'var(--space-4)' }}>
-            {rows.map((row) => (
-              <li key={row.name} className={`timeline__row timeline__row--${row.status}`}>
-                <span className="timeline__marker">
-                  <span className="timeline__node" />
-                </span>
-                <span>
-                  <span className="timeline__stage-name">{row.label}</span>
-                  <p className="timeline__summary">
-                    {row.summary ??
-                      (row.status === 'pending'
-                        ? 'waiting…'
-                        : 'completed')}
-                  </p>
-                </span>
-              </li>
-            ))}
-          </ol>
+          {mode === 'simulator' ? (
+            <ol className="timeline" style={{ marginTop: 'var(--space-4)' }}>
+              {rows.map((row) => (
+                <li key={row.name} className={`timeline__row timeline__row--${row.status}`}>
+                  <span className="timeline__marker">
+                    <span className="timeline__node" />
+                  </span>
+                  <span>
+                    <span className="timeline__stage-name">{row.label}</span>
+                    <p className="timeline__summary">
+                      {row.summary ??
+                        (row.status === 'pending'
+                          ? 'waiting…'
+                          : 'completed')}
+                    </p>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="hw-strip" style={{ marginTop: 'var(--space-4)' }}>
+              <p className="hw-strip__line">
+                <span
+                  className={`led ${hwStatus === 'failed' ? 'led--abort' : hwStatus === 'done' ? 'led--live' : ''}`}
+                />
+                <span className="data">{hwStatus ?? 'idle'}</span>
+                {hwBackend ? <span className="muted"> · backend {hwBackend}</span> : null}
+                {mode === 'hardware' ? (
+                  <span className="muted">
+                    {' '}· qubit limit {HW_MIN_QUBITS}–{HW_MAX_QUBITS}
+                  </span>
+                ) : null}
+              </p>
+              {hwResult ? (
+                <dl className="readout-list hw-readouts">
+                  <div className="readout">
+                    <dt>shots</dt>
+                    <dd className="data">{hwResult.total_shots}</dd>
+                  </div>
+                  <div className="readout">
+                    <dt>shots with key</dt>
+                    <dd className="data">{hwResult.shots_with_key}</dd>
+                  </div>
+                  <div className="readout">
+                    <dt>avg sifted length</dt>
+                    <dd className="data">{hwResult.avg_sifted_length}</dd>
+                  </div>
+                  <div className="readout">
+                    <dt>expected sifted</dt>
+                    <dd className="data">
+                      {(hwResult.expected_sifted_fraction * 100).toFixed(0)}%
+                    </dd>
+                  </div>
+                </dl>
+              ) : null}
+              {hwError ? <p className="sim-error">{hwError}</p> : null}
+            </div>
+          )}
 
           {aiSummary ? (
             <div className="ai-note">
