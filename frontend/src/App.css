@@ -1,106 +1,78 @@
-/* Page layout for the console home. All visual language lives in
-   styles/tokens.css + styles/base.css — this file only places things. */
+/* Auth pages (Login/Register). All values come from the Step-2 tokens;
+   this file only places things — a narrow instrument panel, centered. */
 
-.app-header {
-  padding-block: var(--space-6) var(--space-5);
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5) var(--space-3);
 }
 
-.app-header__sub {
-  margin-top: var(--space-1);
-  font-family: var(--font-data);
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-card .card__head {
+  margin-bottom: var(--space-4);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.auth-form .controls {
+  margin-top: var(--space-2);
+}
+
+.auth-form .controls .btn {
+  flex: 1;
+}
+
+.auth-alt {
+  margin-top: var(--space-3);
   font-size: var(--fs-small);
   color: var(--grey-400);
+  text-align: center;
 }
 
-.grid {
-  display: grid;
-  gap: var(--space-3);
-  padding-bottom: var(--space-7);
+.auth-alt a {
+  color: var(--live-500);
+  text-decoration: none;
 }
 
-@media (min-width: 1024px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-4);
-  }
+.auth-alt a:hover {
+  text-decoration: underline;
 }
 
-.card__head {
+.auth-error {
+  font-size: var(--fs-small);
+  font-family: var(--font-data);
+  color: var(--abort-500);
+  border: var(--border-hairline);
+  border-left: 2px solid var(--abort-500);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+/* Console header: title left, identity + logout right */
+.console-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-4) 0;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.card__note {
-  margin-bottom: var(--space-3);
-  font-size: var(--fs-small);
-}
-
-/* Status LED — the only fully-round element in the system */
-.led {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.led--live {
-  background: var(--live-500);
-  box-shadow: 0 0 6px var(--live-500);
-}
-
-.led--abort {
-  background: var(--abort-500);
-  box-shadow: 0 0 6px var(--abort-500);
-}
-
-.tag {
   font-family: var(--font-data);
   font-size: var(--fs-small);
   color: var(--grey-400);
-  border: var(--border-hairline);
-  border-radius: var(--radius-sm);
-  padding: 2px var(--space-2);
-}
-
-/* Readout rows: label in grey, value in mono on the right edge */
-.stats {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: var(--space-3);
-}
-
-.stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-block: var(--space-2);
-  border-bottom: var(--border-hairline);
-}
-
-.stat:first-child {
-  border-top: var(--border-hairline);
-}
-
-.stat dt {
-  font-size: var(--fs-small);
-  color: var(--grey-400);
-}
-
-.stat dd {
-  margin: 0;
-}
-
-.data--abort {
-  color: var(--abort-500);
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
 }

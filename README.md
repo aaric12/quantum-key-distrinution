@@ -68,9 +68,30 @@ Then run the frontend dev server as above (`cd frontend && npm run dev`).
 | Variable | Where | Default |
 | --- | --- | --- |
 | `DATABASE_URL` | backend | `postgresql+psycopg://qkd:qkd@localhost:5432/qkd` |
-| `VITE_API_BASE` | frontend | `http://localhost:8000` (see `frontend/.env.example`) |
+| `JWT_SECRET` | backend | **required** — no default; the API refuses to start without it |
+| `VITE_API_BASE` | frontend | `http://localhost:8000` |
 
 CORS is pre-configured for `http://localhost:5173` / `4173`.
+
+## Authentication
+
+- `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`.
+- Passwords are bcrypt-hashed (passlib). On login the token is a JWT stored in
+  an **httpOnly cookie** — never localStorage — and backed by a `user_sessions`
+  row so logout revokes server-side.
+- Wrong-email and wrong-password logins both run one bcrypt comparison against
+  a dummy hash, so response timing does not leak whether an email is registered.
+- `/auth/login` and `/auth/register` are rate-limited (slowapi, per-IP).
+
+Generate a secret and put it in `backend/.env` (see `backend/.env.example`):
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+When running the backend container via docker-compose, export `JWT_SECRET` in
+your shell (or a compose `.env` file) — the compose file refuses to start the
+backend without it.
 
 ## Troubleshooting: folder names containing `:`
 

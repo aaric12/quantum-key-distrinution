@@ -1,134 +1,74 @@
-import { useEffect, useState } from 'react'
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router'
+import { AuthProvider, useAuth } from './AuthContext.jsx'
+import Console from './pages/Console.jsx'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 import './App.css'
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
+function RequireAuth({ children }) {
+  const { user, loading } = useAuth()
+  const location = useLocation()
+
+  if (loading) {
+    return (
+      <div className="auth-shell">
+        <p className="data">connecting…</p>
+      </div>
+    )
+  }
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  }
+  return children
+}
+
+function RedirectIfAuthed({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="auth-shell">
+        <p className="data">connecting…</p>
+      </div>
+    )
+  }
+  if (user) {
+    return <Navigate to="/" replace />
+  }
+  return children
+}
 
 export default function App() {
-  const [health, setHealth] = useState(null)
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  const checkHealth = () => {
-    setLoading(true)
-    setError(null)
-    fetch(`${API_BASE}/health`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
-      .then(setHealth)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(checkHealth, [])
-
   return (
-    <div className="container">
-      <header className="app-header">
-        <h1>Quantum Key Distribution</h1>
-        <p className="app-header__sub">
-          education console · backend link check
-        </p>
-      </header>
-
-      <main className="grid">
-        {/* Real state: live when the API answers, abort when it doesn't */}
-        <section className={`card ${error ? 'card--abort' : 'card--live'}`}>
-          <div className="card__head">
-            <h2>Backend link</h2>
-            <span className={`led ${error ? 'led--abort' : 'led--live'}`} />
-          </div>
-
-          {error ? (
-            <p className="card__note">
-              unreachable — <span className="data data--abort">{error}</span>.
-              Is the API running on <span className="data">{API_BASE}</span>?
-            </p>
-          ) : (
-            <dl className="stats">
-              <div className="stat">
-                <dt>status</dt>
-                <dd className={`data ${health?.status === 'ok' ? '' : 'data--abort'}`}>
-                  {health ? health.status : '…'}
-                </dd>
-              </div>
-              <div className="stat">
-                <dt>service</dt>
-                <dd className="data">{health?.app ?? '…'}</dd>
-              </div>
-              <div className="stat">
-                <dt>version</dt>
-                <dd className="data">{health?.version ?? '…'}</dd>
-              </div>
-              <div className="stat">
-                <dt>database</dt>
-                <dd className={`data ${health?.database === 'ok' ? '' : 'data--abort'}`}>
-                  {health?.database ?? '…'}
-                </dd>
-              </div>
-            </dl>
-          )}
-
-          <div className="controls">
-            <button
-              type="button"
-              className="btn btn--secondary"
-              onClick={checkHealth}
-              disabled={loading}
-            >
-              {loading ? 'Checking…' : 'Re-check link'}
-            </button>
-          </div>
-        </section>
-
-        {/* Static panel demoing the abort state + danger control */}
-        <section className="card card--abort">
-          <div className="card__head">
-            <h2>QBER watch</h2>
-            <span className="tag">sample run</span>
-          </div>
-
-          <dl className="stats">
-            <div className="stat">
-              <dt>QBER</dt>
-              <dd className="data data--abort">11.3 %</dd>
-            </div>
-            <div className="stat">
-              <dt>threshold</dt>
-              <dd className="data">8.0 %</dd>
-            </div>
-            <div className="stat">
-              <dt>sifted keys</dt>
-              <dd className="data">1 284</dd>
-            </div>
-          </dl>
-
-          <div className="field">
-            <label className="field__label" htmlFor="threshold">
-              Abort threshold (%)
-            </label>
-            <input
-              id="threshold"
-              className="input"
-              defaultValue="8.0"
-              inputMode="decimal"
-            />
-            <p className="field__hint">
-              A breach lights the panel red and arms the abort control.
-            </p>
-          </div>
-
-          <div className="controls">
-            <button type="button" className="btn btn--primary">
-              Start run
-            </button>
-            <button type="button" className="btn btn--danger">
-              Abort run
-            </button>
-          </div>
-        </section>
-      </main>
-    </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <Console />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <RedirectIfAuthed>
+                <Login />
+              </RedirectIfAuthed>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <RedirectIfAuthed>
+                <Register />
+              </RedirectIfAuthed>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   )
 }

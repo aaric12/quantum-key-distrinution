@@ -19,6 +19,8 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: postgresql+psycopg://qkd:qkd@db:5432/qkd
+      # Generate with: python -c "import secrets; print(secrets.token_urlsafe(48))"
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in your shell or .env file}
     ports:
       - "8000:8000"
     depends_on:
