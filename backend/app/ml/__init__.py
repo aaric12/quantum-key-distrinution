@@ -1,1 +1,1 @@
-"""ML models trained on QKD simulation data will live here."""
+"""ML models over simulation data (attack classification, key-rate prediction)."""

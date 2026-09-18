@@ -1,0 +1,38 @@
+{
+  "classes": [
+    "none",
+    "intercept_resend",
+    "pns",
+    "trojan"
+  ],
+  "feature_names": [
+    "qber",
+    "sample_n",
+    "qber_binomial_z",
+    "sifted_fraction",
+    "loss_rate",
+    "loss_rate_z",
+    "decoy_loss_var",
+    "decoy_loss_z",
+    "pns_flag",
+    "gap_mean",
+    "gap_p95",
+    "gap_max",
+    "gap_tail_ratio",
+    "error_count",
+    "error_nn_scaled",
+    "qber_x_scatter"
+  ],
+  "n_qubits": 4096,
+  "runs_per_class": 120,
+  "seed": 7,
+  "heldout_accuracy": 0.875,
+  "heldout_auc": 0.9687037037037036,
+  "per_class_recall": {
+    "none": 1.0,
+    "intercept_resend": 0.8333333333333334,
+    "pns": 0.9666666666666667,
+    "trojan": 0.7
+  },
+  "sklearn": "1.6.1"
+}
