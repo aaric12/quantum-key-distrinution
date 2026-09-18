@@ -1,0 +1,270 @@
+/* ============================================================================
+   QKD Education Platform — Base styles
+   Consumes tokens.css. Reset, type scale, responsive breakpoints, and the
+   shared primitives: buttons (primary/secondary/danger), cards, inputs.
+   ========================================================================== */
+
+/* ---- Reset ---------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--ink-900);
+  color: var(--grey-400);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---- Type scale ----------------------------------------------------------- */
+/* Headings stay left-aligned, sentence case, tight leading. Body copy uses
+   the grey; anything "live" opts into the mono/data face explicitly. */
+:root {
+  --fs-display: clamp(1.9rem, 1.4rem + 2.2vw, 2.8rem);
+  --fs-h1: clamp(1.5rem, 1.25rem + 1vw, 1.9rem);
+  --fs-h2: 1.25rem;
+  --fs-h3: 1.05rem;
+  --fs-body: 0.9375rem;
+  --fs-small: 0.8125rem;
+  --lh-body: 1.55;
+  --lh-tight: 1.2;
+
+  /* Derived, not part of the palette: high-emphasis text on ink surfaces */
+  --text-hi: #f0f3f6;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text-hi);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+}
+h2 {
+  font-size: var(--fs-h2);
+}
+h3 {
+  font-size: var(--fs-h3);
+}
+
+/* Data readouts: tabular numerals, no width jitter as digits tick */
+.data {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-hi);
+}
+
+/* ---- Breakpoints ----------------------------------------------------------
+   mobile-first. Media queries read the token values; custom property
+   fallbacks keep the queries valid if tokens.css is absent. */
+:root {
+  --bp-tablet: 640px; /* >= 640px  : tablet  */
+  --bp-desktop: 1024px; /* >= 1024px : desktop */
+}
+
+/* ---- Buttons --------------------------------------------------------------
+   Flat field, hairline border, 2px radius. Press = border brightens, button
+   sinks 1px. Focus = dotted outline, the way instrument manuals mark it. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 10px var(--space-4);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--ink-700);
+  color: var(--text-hi);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-snap),
+    border-color var(--dur-fast) var(--ease-snap),
+    transform var(--dur-fast) var(--ease-snap);
+}
+
+.btn:hover {
+  border-color: var(--grey-400);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 1px dashed var(--live-500);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--primary {
+  border-color: var(--live-500);
+  background: var(--live-500);
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+.btn--primary:hover {
+  background: #46e2b2;
+  border-color: #46e2b2;
+}
+
+.btn--secondary {
+  background: transparent;
+}
+
+.btn--danger {
+  border-color: var(--abort-500);
+  background: transparent;
+  color: var(--abort-500);
+}
+
+.btn--danger:hover {
+  background: var(--abort-500);
+  color: var(--ink-900);
+}
+
+/* ---- Cards ----------------------------------------------------------------
+   A "panel": hairline border, machined 4px corners, and a top edge that
+   carries state — mint strip when live, red when aborted, none when idle.
+   No box-shadows; depth comes from the two ink levels. */
+.card {
+  position: relative;
+  padding: var(--space-4);
+  background: var(--ink-700);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.card--live,
+.card--abort {
+  border-top: 2px solid var(--ink-500);
+}
+
+.card--live::before,
+.card--abort::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -1px;
+  right: -1px;
+  height: 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.card--live::before {
+  background: var(--live-500);
+}
+
+.card--abort::before {
+  background: var(--abort-500);
+}
+
+/* ---- Form inputs ----------------------------------------------------------
+   Sits in a recessed "well" (darker than the surface it is on), hairline
+   border that goes mint on focus. Data face inside inputs: users are typing
+   values, not prose. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field__label {
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--text-hi);
+}
+
+.field__hint {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.input {
+  padding: 9px var(--space-2);
+  background: var(--ink-900);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  color: var(--text-hi);
+  transition: border-color var(--dur-fast) var(--ease-snap);
+}
+
+.input::placeholder {
+  color: var(--ink-500);
+}
+
+.input:hover {
+  border-color: var(--grey-400);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--live-500);
+  box-shadow: inset 0 0 0 1px var(--live-500);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--abort-500);
+  box-shadow: inset 0 0 0 1px var(--abort-500);
+}
+
+/* ---- Responsive typography / layout helpers ------------------------------- */
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-inline: var(--space-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-inline: var(--space-7);
+  }
+}

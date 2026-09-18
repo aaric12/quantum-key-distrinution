@@ -1,0 +1,67 @@
+/* ============================================================================
+   QKD Education Platform — Design Tokens
+   Aesthetic: lab instrument. Dark cool slate, phosphor accents, hairline
+   rules, sharp corners. No grey shadows, no cream, no tracked caps.
+   ========================================================================== */
+
+:root {
+  /* ---- Color (6 named tokens) ------------------------------------------ */
+
+  /* Instrument casing: near-black with a cool cast */
+  --ink-900: #0b0e12; /* page background        */
+  --ink-700: #161b22; /* raised surface / card  */
+  --ink-500: #232a34; /* hairline borders, well */
+
+  /* Cool grey for secondary copy (single flat value, no ramp) */
+  --grey-400: #8b95a1;
+
+  /* Phosphor mint — the one clear "active / live" accent.
+     Reads as a locked signal on an oscilloscope. Exclusive to: live status,
+     active states, primary actions, key-rate readouts. */
+  --live-500: #2fd6a3;
+
+  /* Alarm red — reserved for QBER threshold breaches / aborted runs.
+     Never used decoratively; if you see it, the channel is compromised. */
+  --abort-500: #ff4557;
+
+  /* ---- Type (exactly two families) -------------------------------------- */
+  /* IBM Plex Sans for prose/headings; IBM Plex Mono for data. Mono is tabular
+     by construction — live numerals (QBER %, key rate, sifted counts) never
+     jitter width as digits tick. */
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  /* ---- Spacing scale (strict 4px base) ---------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+
+  /* ---- Radius: sharp instrument edges ----------------------------------- */
+  /* Not a pill/squircle system: edges stay near-square so panels read as
+     machined, and status geometry carries meaning. */
+  --radius-sm: 2px; /* inputs, buttons               */
+  --radius-md: 4px; /* cards, panels                 */
+  --radius-full: 999px; /* status LED dots ONLY (round = a physical LED) */
+
+  /* ---- Depth: hairlines, not shadows ------------------------------------ */
+  --border-hairline: 1px solid var(--ink-500);
+  --border-focus: 1px solid var(--live-500);
+
+  /* ---- Motion: relay-switch snap, no floaty easings --------------------- */
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-slow: 400ms;
+
+  /* ---- Elevation (layout only) ------------------------------------------ */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-overlay: 100;
+
+  /* ---- Breakpoints (consumed by base.css media queries) ----------------- */
+  --bp-tablet: 640px;
+  --bp-desktop: 1024px;
+}

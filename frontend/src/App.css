@@ -1,47 +1,106 @@
-.container {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
+/* Page layout for the console home. All visual language lives in
+   styles/tokens.css + styles/base.css — this file only places things. */
+
+.app-header {
+  padding-block: var(--space-6) var(--space-5);
 }
 
-.subtitle {
-  color: var(--muted);
-  margin-bottom: 2rem;
+.app-header__sub {
+  margin-top: var(--space-1);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  color: var(--grey-400);
 }
 
-.card {
+.grid {
+  display: grid;
+  gap: var(--space-3);
+  padding-bottom: var(--space-7);
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+}
+
+.card__head {
   display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-  padding: 1.25rem 1.5rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--card-bg);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
-.dot {
-  width: 12px;
-  height: 12px;
-  margin-top: 6px;
-  border-radius: 50%;
+.card__note {
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-small);
+}
+
+/* Status LED — the only fully-round element in the system */
+.led {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
-.dot-ok {
-  background: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.7);
+.led--live {
+  background: var(--live-500);
+  box-shadow: 0 0 6px var(--live-500);
 }
 
-.dot-warn {
-  background: #fbbf24;
+.led--abort {
+  background: var(--abort-500);
+  box-shadow: 0 0 6px var(--abort-500);
 }
 
-.dot-error {
-  background: #f87171;
+.tag {
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
 }
 
-.detail {
-  margin: 0.35rem 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
+/* Readout rows: label in grey, value in mono on the right edge */
+.stats {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-3);
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-bottom: var(--border-hairline);
+}
+
+.stat:first-child {
+  border-top: var(--border-hairline);
+}
+
+.stat dt {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.stat dd {
+  margin: 0;
+}
+
+.data--abort {
+  color: var(--abort-500);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
