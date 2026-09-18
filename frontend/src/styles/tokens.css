@@ -5,7 +5,7 @@
    ========================================================================== */
 
 :root {
-  /* ---- Color (6 named tokens) ------------------------------------------ */
+  /* ---- Color ------------------------------------------------------------ */
 
   /* Instrument casing: near-black with a cool cast */
   --ink-900: #0b0e12; /* page background        */
@@ -25,6 +25,13 @@
   /* Alarm red — reserved for QBER threshold breaches / aborted runs.
      Never used decoratively; if you see it, the channel is compromised. */
   --abort-500: #ff4557;
+
+  /* Lighter step of the live accent, for hover states only. */
+  --live-400: #46e2b2;
+
+  /* High-emphasis text on ink surfaces (headings, values). Derived, kept
+     here so every color literal lives in exactly one file. */
+  --text-hi: #f0f3f6;
 
   /* ---- Type (exactly two families) -------------------------------------- */
   /* IBM Plex Sans for prose/headings; IBM Plex Mono for data. Mono is tabular

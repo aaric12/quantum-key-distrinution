@@ -81,7 +81,7 @@
   z-index: var(--z-raised);
   width: 8px;
   height: 8px;
-  margin-top: 6px;
+  margin-top: calc(var(--space-1) + 2px);
   border-radius: var(--radius-full);
   background: var(--ink-500);
   border: 1px solid var(--ink-500);
@@ -310,7 +310,7 @@
 .qber-chart__label {
   fill: var(--abort-500);
   font-family: var(--font-data);
-  font-size: 9px;
+  font-size: var(--fs-micro);
 }
 
 /* ---- Abort note / errors -------------------------------------------------- */
@@ -417,7 +417,7 @@
 }
 
 .console-nav a {
-  padding: 6px 10px;
+  padding: calc(var(--space-1) + 2px) calc(var(--space-2) + 2px);
   border: var(--border-hairline);
   border-radius: var(--radius-sm);
   font-size: var(--fs-small);

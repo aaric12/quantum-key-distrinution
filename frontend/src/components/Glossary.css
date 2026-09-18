@@ -43,7 +43,7 @@
 }
 
 .glossary__cat {
-  font-size: 10px;
+  font-size: var(--fs-micro);
   padding: 1px 7px;
   border-radius: var(--radius-full);
   border: 1px solid var(--grey-400);

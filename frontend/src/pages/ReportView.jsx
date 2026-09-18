@@ -78,14 +78,19 @@ export default function ReportView() {
     let stale = false
     setReport(null)
     setError(null)
-    api(`/reports/${uuid}`).then(({ ok, status, data }) => {
-      if (stale) return
-      if (!ok) {
-        setError(status === 404 ? 'This report does not exist (or the link is wrong).' : `HTTP ${status}`)
-        return
-      }
-      setReport(data)
-    })
+    api(`/reports/${uuid}`)
+      .then(({ ok, status, data }) => {
+        if (stale) return
+        if (!ok) {
+          setError(status === 404 ? 'This report does not exist (or the link is wrong).' : `HTTP ${status}`)
+          return
+        }
+        setReport(data)
+      })
+      .catch(() => {
+        // Network failure: show an error instead of spinning forever.
+        if (!stale) setError('Could not reach the server. Try again later.')
+      })
     return () => {
       stale = true
     }

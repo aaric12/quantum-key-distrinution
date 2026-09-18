@@ -41,6 +41,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:4173",  # vite preview
+        "http://127.0.0.1:4173",  # vite preview on the loopback IP
     ],
     allow_credentials=True,
     allow_methods=["*"],

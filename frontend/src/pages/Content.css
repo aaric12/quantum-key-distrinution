@@ -197,7 +197,7 @@
 }
 
 .proto-facts .readout dt {
-  font-size: 10px;
+  font-size: var(--fs-micro);
 }
 
 .proto-steps {
@@ -226,7 +226,7 @@
   content: 'step ' counter(proto-step);
   display: block;
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--live-500);
@@ -253,7 +253,7 @@
 .compare-table td {
   text-align: left;
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid rgba(139, 149, 161, 0.25);
+  border-bottom: 1px solid color-mix(in srgb, var(--grey-400) 25%, transparent);
   vertical-align: top;
   line-height: 1.45;
 }
@@ -271,7 +271,7 @@
 }
 
 .compare-table tbody tr:hover {
-  background: rgba(14, 124, 102, 0.06);
+  background: color-mix(in srgb, var(--live-500) 6%, transparent);
 }
 
 .compare-table td:first-child {
@@ -307,7 +307,7 @@
 
   .compare-wrap {
     /* scroll hint fades in at the right edge */
-    background: linear-gradient(to right, transparent 92%, rgba(11, 14, 18, 0.9));
+    background: linear-gradient(to right, transparent 92%, color-mix(in srgb, var(--ink-900) 90%, transparent));
   }
 }
 
@@ -338,7 +338,7 @@
     grid-template-columns: 1fr;
     gap: 2px;
     padding: var(--space-2) 0;
-    border-bottom: 1px solid rgba(139, 149, 161, 0.15);
+    border-bottom: 1px solid color-mix(in srgb, var(--grey-400) 15%, transparent);
   }
 
   .compare-table td:last-child {
@@ -349,14 +349,14 @@
   .compare-table td::before {
     content: attr(data-label);
     font-family: var(--font-data);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--live-500);
   }
 
   .compare-table td:first-child {
-    border-bottom: 1px solid rgba(139, 149, 161, 0.25);
+    border-bottom: 1px solid color-mix(in srgb, var(--grey-400) 25%, transparent);
     padding-bottom: var(--space-3);
   }
 
@@ -372,7 +372,7 @@
 
 /* ---- SVG diagram labels (Foundations) ------------------------------------ */
 .diag-label {
-  font-size: 10px;
+  font-size: var(--fs-micro);
   font-family: var(--font-data);
   fill: var(--grey-400);
 }

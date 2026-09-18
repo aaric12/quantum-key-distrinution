@@ -53,11 +53,9 @@ textarea {
   --fs-h3: 1.05rem;
   --fs-body: 0.9375rem;
   --fs-small: 0.8125rem;
+  --fs-micro: 0.625rem; /* 10px — data-label / tick captions */
   --lh-body: 1.55;
   --lh-tight: 1.2;
-
-  /* Derived, not part of the palette: high-emphasis text on ink surfaces */
-  --text-hi: #f0f3f6;
 }
 
 h1,
@@ -195,8 +193,8 @@ summary:focus-visible,
 }
 
 .btn--primary:hover {
-  background: #46e2b2;
-  border-color: #46e2b2;
+  background: var(--live-400);
+  border-color: var(--live-400);
 }
 
 .btn--secondary {

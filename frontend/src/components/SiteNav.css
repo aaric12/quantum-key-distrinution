@@ -14,7 +14,7 @@
 }
 
 .sitenav__link {
-  padding: 6px 10px;
+  padding: calc(var(--space-1) + 2px) calc(var(--space-2) + 2px);
   border: var(--border-hairline);
   border-radius: var(--radius-sm);
   font-size: var(--fs-small);
@@ -49,7 +49,7 @@
 
 .sitenav__burger {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .sitenav__burger span {
@@ -87,7 +87,7 @@
   background: var(--ink-700);
   border: var(--border-hairline);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ink-900) 45%, transparent);
 }
 
 .sitenav__panel.is-open {

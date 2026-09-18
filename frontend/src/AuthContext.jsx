@@ -14,12 +14,21 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false
-    api('/auth/me').then(({ ok, data }) => {
-      if (!cancelled) {
-        setUser(ok ? data : null)
-        setLoading(false)
-      }
-    })
+    api('/auth/me')
+      .then(({ ok, data }) => {
+        if (!cancelled) {
+          setUser(ok ? data : null)
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        // Network/CORS failure: degrade to logged-out instead of hanging
+        // every auth-gated page on the loading gate forever.
+        if (!cancelled) {
+          setUser(null)
+          setLoading(false)
+        }
+      })
     return () => {
       cancelled = true
     }

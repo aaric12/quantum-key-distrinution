@@ -15,7 +15,7 @@
 
 .kr-chart__tick {
   fill: var(--grey-400);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-family: var(--font-data);
 }
 
@@ -31,7 +31,7 @@
 }
 
 .kr-chart__cutoff-label {
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-family: var(--font-data);
 }
 
