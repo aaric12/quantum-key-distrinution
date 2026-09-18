@@ -1,6 +1,8 @@
 import { Link } from 'react-router'
 import { useAuth } from '../AuthContext.jsx'
 import Glossary from '../components/Glossary.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS, PUBLIC_LINKS } from '../components/navLinks.js'
 import './Content.css'
 
 const STAGES = [
@@ -71,28 +73,7 @@ export default function Home() {
             An interactive field guide: the physics, the protocols, the attacks, and the numbers.
           </p>
         </div>
-        <nav className="console-nav">
-          {user ? (
-            <>
-              <a href="/console">Console</a>
-              <a href="/simulate">Simulate</a>
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={() => window.location.assign('/console')}
-              >
-                Open console
-              </button>
-            </>
-          ) : (
-            <>
-              <a href="/register">Sign up</a>
-              <a href="/login" className="btn btn--primary">
-                Log in
-              </a>
-            </>
-          )}
-        </nav>
+        <SiteNav links={user ? APP_LINKS : PUBLIC_LINKS} />
       </header>
 
       <section className="card hero">
@@ -114,6 +95,11 @@ export default function Home() {
           <Link to="/protocols" className="btn btn--secondary">
             Jump to the protocols
           </Link>
+          {user ? (
+            <Link to="/console" className="btn btn--secondary">
+              Open console
+            </Link>
+          ) : null}
         </div>
       </section>
 

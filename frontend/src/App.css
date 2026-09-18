@@ -66,6 +66,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding-block: var(--space-4) 0;
+  flex-wrap: wrap; /* nav drops under the title on narrow screens */
 }
 
 .topbar-user {
@@ -75,4 +76,22 @@
   font-family: var(--font-data);
   font-size: var(--fs-small);
   color: var(--grey-400);
+}
+
+/* Console main grid: single column on mobile/tablet, two on desktop. */
+.grid {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+}
+
+.grid .card + .card {
+  margin-top: var(--space-3);
 }

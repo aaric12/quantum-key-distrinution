@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { API_BASE, api } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS, PUBLIC_LINKS } from '../components/navLinks.js'
 import './Simulate.css'
 import './KeyRate.css'
 import './ReportView.css'
@@ -99,9 +101,7 @@ export default function ReportView() {
       <div className="container">
         <header className="console-topbar">
           <h1>Report</h1>
-          <nav className="console-nav">
-            <Link to="/console">Console</Link>
-          </nav>
+          <SiteNav links={[{ label: 'Console', href: '/console' }]} />
         </header>
         <section className="card card--abort">
           <p className="sim-error">{error}</p>
@@ -139,23 +139,7 @@ export default function ReportView() {
             ) : null}
           </p>
         </div>
-        <nav className="console-nav">
-          {user ? (
-            <>
-              <a href="/console">Console</a>
-              <a href="/simulate">Simulate</a>
-              <a href="/keyrate">Key rate</a>
-              <button type="button" className="btn btn--secondary" onClick={onLogout}>
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <a href="/register">Sign up</a>
-              <a href="/login">Log in</a>
-            </>
-          )}
-        </nav>
+        <SiteNav links={user ? APP_LINKS : PUBLIC_LINKS} />
       </header>
 
       <main className="sim-grid">

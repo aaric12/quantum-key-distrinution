@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router'
 import { api, wsUrl } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 import ApiKeyInput from '../components/ApiKeyInput.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS } from '../components/navLinks.js'
 import './Simulate.css'
 
 const HW_MIN_QUBITS = 20
@@ -415,15 +417,7 @@ export default function Simulate() {
             BB84 pipeline · signed in as <span className="data">{user?.email}</span>
           </p>
         </div>
-        <nav className="console-nav">
-          <a href="/">Guide</a><a href="/console">Console</a>
-          <a href="/simulate" className="active">
-            Simulate
-          </a>
-          <button type="button" className="btn btn--secondary" onClick={onLogout}>
-            Log out
-          </button>
-        </nav>
+        <SiteNav links={APP_LINKS} />
       </header>
 
       <main className="sim-grid">

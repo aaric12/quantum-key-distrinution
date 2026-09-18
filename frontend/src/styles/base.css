@@ -94,6 +94,58 @@ h3 {
   --bp-desktop: 1024px; /* >= 1024px : desktop */
 }
 
+/* ---- Keyboard focus (global, visible everywhere) -----------------------
+   One dashed instrument outline for every interactive element; inputs keep
+   their inset mint border too. :focus-visible only shows for keyboards. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px dashed var(--live-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.range:focus-visible {
+  outline: 2px dashed var(--live-500);
+  outline-offset: 2px;
+}
+
+/* ---- Motion: honour prefers-reduced-motion ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Mobile tap targets + full-width forms (<640px) --------------------- */
+@media (max-width: 639.98px) {
+  .btn {
+    min-height: 44px; /* WCAG 2.5.5 / iOS HIG minimum */
+    width: auto;
+  }
+
+  .input {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .field {
+    width: 100% !important; /* overrides fixed .sim-controls widths */
+  }
+
+  .range {
+    height: 44px; /* taller hit area; the thumb track stays centred */
+  }
+}
+
 /* ---- Buttons --------------------------------------------------------------
    Flat field, hairline border, 2px radius. Press = border brightens, button
    sinks 1px. Focus = dotted outline, the way instrument manuals mark it. */
@@ -231,7 +283,7 @@ h3 {
 }
 
 .input::placeholder {
-  color: var(--ink-500);
+  color: var(--grey-400); /* was --ink-500: 1.2:1, far below AA */
 }
 
 .input:hover {

@@ -90,10 +90,11 @@
 /* Pending: hollow node, dim title */
 .timeline__row--pending .timeline__node {
   background: var(--ink-700);
+  border-color: var(--grey-400); /* visible hollow node on dark card */
 }
 
 .timeline__row--pending .timeline__stage-name {
-  color: var(--ink-500);
+  color: var(--grey-400); /* was --ink-500 (~1.2:1) — illegible, fails AA */
 }
 
 /* Live: mint node, mint title */
@@ -345,6 +346,14 @@
   display: grid;
   gap: var(--space-3);
   margin-top: var(--space-4);
+}
+
+/* Timeline is a vertical stack at every breakpoint; on tablet/desktop the
+   rows relax into two columns of text beside the spine where space allows. */
+@media (min-width: 640px) {
+  .timeline__row {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
 }
 
 @media (min-width: 1024px) {

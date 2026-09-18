@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { api } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS } from '../components/navLinks.js'
 import './Simulate.css'
 import './KeyRate.css'
 
@@ -209,16 +211,7 @@ export default function KeyRate() {
             GLLP asymptotic model · signed in as <span className="data">{user?.email}</span>
           </p>
         </div>
-        <nav className="console-nav">
-          <a href="/">Guide</a><a href="/console">Console</a>
-          <a href="/simulate">Simulate</a>
-          <a href="/keyrate" className="active">
-            Key rate
-          </a>
-          <button type="button" className="btn btn--secondary" onClick={onLogout}>
-            Log out
-          </button>
-        </nav>
+        <SiteNav links={APP_LINKS} />
       </header>
 
       <main className="sim-grid">

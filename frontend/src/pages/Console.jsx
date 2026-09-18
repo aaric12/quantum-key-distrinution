@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { api } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS } from '../components/navLinks.js'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
 
@@ -43,11 +45,7 @@ export default function Console() {
           </p>
         </div>
         <div className="topbar-user">
-          <nav className="console-nav">
-            <Link to="/">Guide</Link><Link to="/console">Console</Link>
-            <Link to="/simulate">Simulate</Link>
-            <Link to="/keyrate">Key rate</Link>
-          </nav>
+          <SiteNav links={APP_LINKS} />
           <span className="data">{user?.name}</span>
           <button type="button" className="btn btn--secondary" onClick={onLogout}>
             Log out

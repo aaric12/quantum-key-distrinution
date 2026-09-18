@@ -160,6 +160,18 @@
   height: auto;
 }
 
+/* Mobile: keep diagram text legible — the wide viewBoxes would otherwise
+   scale their labels below readable size, so allow a horizontal swipe. */
+@media (max-width: 639.98px) {
+  .figure {
+    overflow-x: auto;
+  }
+
+  .figure svg {
+    min-width: 460px;
+  }
+}
+
 .figure figcaption {
   font-size: var(--fs-small);
   color: var(--grey-400);
@@ -270,6 +282,92 @@
 
 .compare-wrap {
   overflow-x: auto;
+}
+
+/* ---- Comparison table: fluid on desktop, stacked cards on mobile --------- */
+/* Desktop (>1024px): comfortable fixed table layout, no mid-word breaks. */
+@media (min-width: 1025px) {
+  .compare-table {
+    table-layout: fixed;
+  }
+
+  .compare-table th,
+  .compare-table td {
+    overflow-wrap: normal;
+  }
+}
+
+/* Tablet (640–1024px): keep the table but let it scroll horizontally inside
+   its card instead of stretching the page. */
+@media (max-width: 1024px) {
+  .compare-table {
+    table-layout: auto;
+    min-width: 760px; /* forces the wrapper to scroll, not the page */
+  }
+
+  .compare-wrap {
+    /* scroll hint fades in at the right edge */
+    background: linear-gradient(to right, transparent 92%, rgba(11, 14, 18, 0.9));
+  }
+}
+
+/* Mobile (<640px): restructure into stacked cards — each row becomes a
+   labelled block; thead is hidden, data-label attributes supply captions. */
+@media (max-width: 639.98px) {
+  .compare-table,
+  .compare-table tbody,
+  .compare-table tr,
+  .compare-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .compare-table thead {
+    display: none; /* captions come from td[data-label] instead */
+  }
+
+  .compare-table tr {
+    border: var(--border-hairline);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .compare-table td {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid rgba(139, 149, 161, 0.15);
+  }
+
+  .compare-table td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .compare-table td::before {
+    content: attr(data-label);
+    font-family: var(--font-data);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--live-500);
+  }
+
+  .compare-table td:first-child {
+    border-bottom: 1px solid rgba(139, 149, 161, 0.25);
+    padding-bottom: var(--space-3);
+  }
+
+  .compare-table td:first-child::before {
+    display: none; /* the protocol name itself is the card title */
+  }
+
+  /* Long content wraps instead of forcing width. */
+  .compare-table td * {
+    overflow-wrap: anywhere;
+  }
 }
 
 /* ---- SVG diagram labels (Foundations) ------------------------------------ */

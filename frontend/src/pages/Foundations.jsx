@@ -1,6 +1,8 @@
 import { Link } from 'react-router'
 import { useAuth } from '../AuthContext.jsx'
 import Glossary from '../components/Glossary.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS, PUBLIC_LINKS } from '../components/navLinks.js'
 import './Content.css'
 
 const S = {
@@ -109,11 +111,7 @@ export default function Foundations() {
             The three quantum rules QKD&apos;s security rests on.
           </p>
         </div>
-        <nav className="console-nav">
-          <a href="/">Home</a>
-          <a href="/protocols">Protocols</a>
-          {user ? <a href="/simulate">Simulate</a> : <a href="/register">Sign up</a>}
-        </nav>
+        <SiteNav links={user ? APP_LINKS : PUBLIC_LINKS} />
       </header>
 
       <section className="card">

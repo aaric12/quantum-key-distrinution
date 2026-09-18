@@ -1,6 +1,8 @@
 import { Link, useParams } from 'react-router'
 import { useAuth } from '../AuthContext.jsx'
 import Glossary from '../components/Glossary.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS, PUBLIC_LINKS } from '../components/navLinks.js'
 import './Content.css'
 
 const PROTOCOLS = {
@@ -149,16 +151,7 @@ export function ProtocolDetail() {
           <h1>{p.name}</h1>
           <p className="app-header__sub">{p.tagline}</p>
         </div>
-        <nav className="console-nav">
-          <a href="/protocols">Protocols</a>
-          <a href="/comparison">Compare</a>
-          {p.soon ? null : (
-            <a href="/simulate" className="btn btn--primary">
-              Simulate {p.name}
-            </a>
-          )}
-          {user ? null : <a href="/register">Sign up</a>}
-        </nav>
+        <SiteNav links={user ? APP_LINKS : PUBLIC_LINKS} />
       </header>
 
       <section className="card">
@@ -250,12 +243,7 @@ export default function Protocols() {
             Five ways to build a key from quantum states — two runnable today.
           </p>
         </div>
-        <nav className="console-nav">
-          <a href="/">Home</a>
-          <a href="/foundations">Foundations</a>
-          <a href="/comparison">Compare</a>
-          {user ? <a href="/simulate">Simulate</a> : null}
-        </nav>
+        <SiteNav links={user ? APP_LINKS : PUBLIC_LINKS} />
       </header>
 
       <section className="card">

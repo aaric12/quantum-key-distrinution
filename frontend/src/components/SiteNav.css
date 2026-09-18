@@ -1,0 +1,125 @@
+/* ---- SiteNav ---------------------------------------------------------------
+   >= 640px: the plain horizontal link row (instrument look).
+   < 640px: hamburger toggle + dropdown panel, 44px minimum tap targets.   */
+
+.sitenav {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Row: hidden on mobile, flex from tablet up. */
+.sitenav__row {
+  display: none;
+}
+
+.sitenav__link {
+  padding: 6px 10px;
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-small);
+  font-family: var(--font-data);
+  color: var(--grey-400);
+  text-decoration: none;
+}
+
+.sitenav__link:hover {
+  border-color: var(--grey-400);
+  color: var(--text-hi);
+}
+
+.sitenav__link.active {
+  border-color: var(--live-500);
+  color: var(--live-500);
+}
+
+/* Hamburger: hidden on desktop, visible below 640px. 44x44 tap target. */
+.sitenav__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--ink-700);
+  cursor: pointer;
+}
+
+.sitenav__burger {
+  display: grid;
+  gap: 4px;
+}
+
+.sitenav__burger span {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: var(--text-hi);
+  transition: transform var(--dur-fast) var(--ease-snap),
+    opacity var(--dur-fast) var(--ease-snap);
+}
+
+/* Burger morphs into an X when open. */
+.sitenav__toggle[aria-expanded='true'] .sitenav__burger span:nth-child(1) {
+  transform: translateY(5.5px) rotate(45deg);
+}
+
+.sitenav__toggle[aria-expanded='true'] .sitenav__burger span:nth-child(2) {
+  opacity: 0;
+}
+
+.sitenav__toggle[aria-expanded='true'] .sitenav__burger span:nth-child(3) {
+  transform: translateY(-5.5px) rotate(-45deg);
+}
+
+/* Dropdown panel: absolutely positioned under the toggle. */
+.sitenav__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-overlay);
+  min-width: 180px;
+  display: none;
+  flex-direction: column;
+  padding: var(--space-2);
+  background: var(--ink-700);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.sitenav__panel.is-open {
+  display: flex;
+}
+
+.sitenav__link--stack {
+  padding: 12px var(--space-3); /* 12 + 12 + ~19px line = 44px min target */
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-body);
+}
+
+.sitenav__link--stack:hover {
+  background: var(--ink-900);
+  border: none;
+}
+
+.sitenav__link--stack.active {
+  border: none;
+  border-left: 2px solid var(--live-500);
+}
+
+@media (min-width: 640px) {
+  .sitenav__row {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .sitenav__toggle,
+  .sitenav__panel {
+    display: none;
+  }
+}

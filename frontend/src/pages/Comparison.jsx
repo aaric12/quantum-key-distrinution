@@ -1,6 +1,8 @@
 import { Link } from 'react-router'
 import { useAuth } from '../AuthContext.jsx'
 import Glossary from '../components/Glossary.jsx'
+import SiteNav from '../components/SiteNav.jsx'
+import { APP_LINKS, PUBLIC_LINKS } from '../components/navLinks.js'
 import './Content.css'
 
 /**
@@ -76,11 +78,7 @@ export default function Comparison() {
             Five QKD protocols across the axes that matter for deployment.
           </p>
         </div>
-        <nav className="console-nav">
-          <a href="/">Home</a>
-          <a href="/protocols">Protocols</a>
-          {user ? <a href="/simulate">Simulate</a> : null}
-        </nav>
+        <SiteNav links={user ? APP_LINKS : PUBLIC_LINKS} />
       </header>
 
       <section className="card">
@@ -103,7 +101,7 @@ export default function Comparison() {
             <tbody>
               {ROWS.map((r) => (
                 <tr key={r.name}>
-                  <td>
+                  <td data-label="Protocol">
                     <Link to={`/${r.slug}`} className="data">
                       {r.name}
                     </Link>
@@ -113,11 +111,11 @@ export default function Comparison() {
                       {r.sim ? ' · runnable' : ''}
                     </span>
                   </td>
-                  <td>{r.security}</td>
-                  <td>{r.hardware}</td>
-                  <td>{r.keyRate}</td>
-                  <td>{r.maturity}</td>
-                  <td>{r.attacks}</td>
+                  <td data-label="Security basis">{r.security}</td>
+                  <td data-label="Hardware needs">{r.hardware}</td>
+                  <td data-label="Key rate">{r.keyRate}</td>
+                  <td data-label="Deployment maturity">{r.maturity}</td>
+                  <td data-label="Attack resistance">{r.attacks}</td>
                 </tr>
               ))}
             </tbody>

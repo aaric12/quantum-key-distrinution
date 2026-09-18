@@ -12,8 +12,10 @@
   --ink-700: #161b22; /* raised surface / card  */
   --ink-500: #232a34; /* hairline borders, well */
 
-  /* Cool grey for secondary copy (single flat value, no ramp) */
-  --grey-400: #8b95a1;
+  /* Cool grey for secondary copy (single flat value, no ramp).
+     #a3adba gives 8.5:1 on --ink-900 and 7.6:1 on --ink-700 (WCAG AA needs
+     4.5:1); the previous #8b95a1 only managed 3.5:1 and failed for body text. */
+  --grey-400: #a3adba;
 
   /* Phosphor mint — the one clear "active / live" accent.
      Reads as a locked signal on an oscilloscope. Exclusive to: live status,
