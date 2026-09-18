@@ -16,14 +16,26 @@ const STAGE_ORDER = [
 ]
 
 const STAGE_LABELS = {
-  alice_encode: '1 · Alice encodes',
-  channel: '2 · Quantum channel',
-  bob_measure: '3 · Bob measures',
-  sifting: '4 · Sifting',
-  qber_check: '5 · QBER check',
-  abort_decision: '6 · Abort decision',
-  error_correction: '7 · Error correction',
-  privacy_amplification: '8 · Privacy amplification',
+  bb84: {
+    alice_encode: '1 · Alice encodes (4 states)',
+    channel: '2 · Quantum channel',
+    bob_measure: '3 · Bob measures',
+    sifting: '4 · Sifting (basis match)',
+    qber_check: '5 · QBER check',
+    abort_decision: '6 · Abort decision',
+    error_correction: '7 · Error correction',
+    privacy_amplification: '8 · Privacy amplification',
+  },
+  b92: {
+    alice_encode: '1 · Alice encodes (2 non-orthogonal states)',
+    channel: '2 · Quantum channel',
+    bob_measure: '3 · Bob measures (random bases)',
+    sifting: '4 · Sifting (conclusive outcomes)',
+    qber_check: '5 · QBER check',
+    abort_decision: '6 · Abort decision',
+    error_correction: '7 · Error correction',
+    privacy_amplification: '8 · Privacy amplification',
+  },
 }
 
 const QBER_THRESHOLD = 0.11
@@ -32,12 +44,12 @@ const QBER_THRESHOLD = 0.11
  * Build the eight timeline rows in pipeline order. Known stages carry their
  * streamed summary; not-yet-received ones sit in the pending state.
  */
-function buildRows(stageMap) {
+function buildRows(stageMap, labels) {
   return STAGE_ORDER.map((name) => {
     const msg = stageMap.get(name)
     return {
       name,
-      label: STAGE_LABELS[name],
+      label: labels[name],
       summary: msg ? msg.summary : null,
       status: msg ? (msg.status || 'done') : 'pending',
     }
@@ -64,6 +76,7 @@ export default function Simulate() {
   const [error, setError] = useState(null)
   const [history, setHistory] = useState([])
   const [nQubits, setNQubits] = useState('256')
+  const [protocol, setProtocol] = useState('bb84')
 
   // wsRef holds the live WebSocket so unmount can close it; aliveRef marks
   // whether the current connection should still drive state (StrictMode
@@ -114,7 +127,7 @@ export default function Simulate() {
     setError(null)
     setRunning(true)
 
-    const ws = new WebSocket(wsUrl('/ws/simulate/bb84'))
+    const ws = new WebSocket(wsUrl(`/ws/simulate/${protocol}`))
     wsRef.current = ws
     aliveRef.current = true
 
@@ -152,7 +165,7 @@ export default function Simulate() {
       }
       if (wsRef.current === ws) wsRef.current = null
     }
-  }, [nQubits, applyStageMessage, handleDone])
+  }, [protocol, nQubits, applyStageMessage, handleDone])
 
   /** Fallback path: one POST, then replay the returned stage list. */
   const runOverRest = useCallback(async () => {
@@ -162,7 +175,7 @@ export default function Simulate() {
     setError(null)
     setRunning(true)
 
-    const { ok, status, data } = await api('/simulate/bb84', {
+    const { ok, status, data } = await api(`/simulate/${protocol}`, {
       method: 'POST',
       body: { n_qubits: Number(nQubits) || 256 },
     })
@@ -188,7 +201,7 @@ export default function Simulate() {
       data.id,
       'rest',
     )
-  }, [nQubits, applyStageMessage, handleDone])
+  }, [protocol, nQubits, applyStageMessage, handleDone])
 
   const onRun = () => {
     if (running) return
@@ -197,7 +210,7 @@ export default function Simulate() {
 
   const qberPct = formatQber(summary?.qber)
   const aborted = Boolean(summary?.aborted)
-  const rows = buildRows(stageMap)
+  const rows = buildRows(stageMap, STAGE_LABELS[protocol])
 
   async function onLogout() {
     await logout()
@@ -234,6 +247,24 @@ export default function Simulate() {
           </div>
 
           <div className="sim-controls">
+            <div className="field">
+              <label className="field__label" htmlFor="protocol">
+                Protocol
+              </label>
+              <div className="controls" style={{ marginTop: 0 }}>
+                {Object.keys(STAGE_LABELS).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`btn ${protocol === p ? 'btn--primary' : 'btn--secondary'}`}
+                    onClick={() => setProtocol(p)}
+                    disabled={running}
+                  >
+                    {p.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="field">
               <label className="field__label" htmlFor="nqubits">
                 Qubits
