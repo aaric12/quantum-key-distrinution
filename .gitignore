@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+*.local
+
+# Vite
+frontend/dist/
+
+# Env files (keep .env.example)
+.env
+backend/.env
+frontend/.env
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
