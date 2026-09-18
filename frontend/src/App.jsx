@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './AuthContext.jsx'
 import Console from './pages/Console.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import Simulate from './pages/Simulate.jsx'
 import './App.css'
 
 function RequireAuth({ children }) {
@@ -50,6 +51,14 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/simulate"
+            element={
+              <RequireAuth>
+                <Simulate />
+              </RequireAuth>
+            }
+ />
           <Route
             path="/login"
             element={

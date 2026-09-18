@@ -1,0 +1,325 @@
+/* Simulate page: live stage timeline, gauge + stats, run history.
+   All values come from the Step-2 tokens; this file only places things. */
+
+/* ---- Run controls -------------------------------------------------------- */
+.sim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.sim-controls .field {
+  width: 140px;
+}
+
+.sim-controls .btn {
+  height: 38px; /* align with .input height */
+}
+
+/* ---- Timeline ------------------------------------------------------------ */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline__row {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  border-top: var(--border-hairline);
+  animation: stage-in var(--dur-slow) var(--ease-snap);
+}
+
+.timeline__row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Spine + connector node */
+.timeline__marker {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.timeline__marker::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  width: 1px;
+  background: var(--ink-500);
+}
+
+.timeline__row:first-child .timeline__marker::before {
+  top: 8px; /* trim above the first node */
+}
+
+.timeline__row:last-child .timeline__marker::before {
+  bottom: auto;
+  height: 16px; /* trim below the last node */
+}
+
+.timeline__node {
+  position: relative;
+  z-index: var(--z-raised);
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--radius-full);
+  background: var(--ink-500);
+  border: 1px solid var(--ink-500);
+}
+
+/* Pending: hollow node, dim title */
+.timeline__row--pending .timeline__node {
+  background: var(--ink-700);
+}
+
+.timeline__row--pending .timeline__stage-name {
+  color: var(--ink-500);
+}
+
+/* Live: mint node, mint title */
+.timeline__row--live .timeline__node {
+  background: var(--live-500);
+  border-color: var(--live-500);
+  box-shadow: 0 0 6px var(--live-500);
+}
+
+.timeline__row--live .timeline__stage-name {
+  color: var(--live-500);
+}
+
+/* Done: solid node, bright title */
+.timeline__row--done .timeline__node {
+  background: var(--live-500);
+  border-color: var(--live-500);
+}
+
+.timeline__row--done .timeline__stage-name {
+  color: var(--text-hi);
+}
+
+/* Aborted run: alarm red replaces mint from the abort stage onward */
+.timeline__row--abort .timeline__node {
+  background: var(--abort-500);
+  border-color: var(--abort-500);
+}
+
+.timeline__row--abort .timeline__stage-name,
+.timeline__row--abort .timeline__summary {
+  color: var(--abort-500);
+}
+
+.timeline__stage-name {
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.timeline__summary {
+  margin-top: 2px;
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+/* ---- Readouts ------------------------------------------------------------ */
+.readout-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.readout dt {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.readout dd {
+  margin: 0;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-h2);
+  color: var(--text-hi);
+}
+
+.readout dd .unit {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.data--live {
+  color: var(--live-500);
+}
+
+/* QBER gauge: hairline track, fill carries the live/abort state */
+.gauge {
+  position: relative;
+  height: 6px;
+  margin-top: var(--space-2);
+  background: var(--ink-900);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.gauge__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--live-500);
+  transition: width var(--dur-slow) var(--ease-snap);
+}
+
+.gauge__fill--abort {
+  background: var(--abort-500);
+}
+
+.gauge__threshold {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--abort-500);
+}
+
+/* ---- Abort note / errors -------------------------------------------------- */
+.abort-note {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: var(--border-hairline);
+  border-left: 2px solid var(--abort-500);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  color: var(--abort-500);
+}
+
+.sim-error {
+  margin-top: var(--space-3);
+  font-size: var(--fs-small);
+  font-family: var(--font-data);
+  color: var(--abort-500);
+  border: var(--border-hairline);
+  border-left: 2px solid var(--abort-500);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.card__note {
+  margin-top: var(--space-2);
+  font-size: var(--fs-small);
+}
+
+/* ---- Layout -------------------------------------------------------------- */
+.sim-grid {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .sim-grid {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+}
+
+.sim-grid .card + .card {
+  margin-top: var(--space-3);
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+/* ---- History ------------------------------------------------------------- */
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-top: var(--border-hairline);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+}
+
+.history-list li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.history-list .muted {
+  color: var(--grey-400);
+}
+
+.history-empty {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+/* ---- Nav ----------------------------------------------------------------- */
+.console-nav {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.console-nav a {
+  padding: 6px 10px;
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-small);
+  font-family: var(--font-data);
+  color: var(--grey-400);
+  text-decoration: none;
+}
+
+.console-nav a:hover {
+  border-color: var(--grey-400);
+  color: var(--text-hi);
+}
+
+.console-nav a.active {
+  border-color: var(--live-500);
+  color: var(--live-500);
+}

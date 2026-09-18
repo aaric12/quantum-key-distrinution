@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { api } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 
@@ -43,6 +43,10 @@ export default function Console() {
           </p>
         </div>
         <div className="topbar-user">
+          <nav className="console-nav">
+            <Link to="/">Console</Link>
+            <Link to="/simulate">Simulate</Link>
+          </nav>
           <span className="data">{user?.name}</span>
           <button type="button" className="btn btn--secondary" onClick={onLogout}>
             Log out
@@ -138,9 +142,9 @@ export default function Console() {
           </div>
 
           <div className="controls">
-            <button type="button" className="btn btn--primary">
-              Start run
-            </button>
+            <Link to="/simulate" className="btn btn--primary">
+              Start run →
+            </Link>
             <button type="button" className="btn btn--danger">
               Abort run
             </button>

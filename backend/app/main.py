@@ -9,6 +9,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app import auth, models
 from app.routers import auth as auth_router
 from app.routers import health
+from app.routers import simulate as simulate_router
 
 
 @asynccontextmanager
@@ -44,6 +45,7 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(auth_router.router, tags=["auth"])
+app.include_router(simulate_router.router, tags=["simulate"])
 
 
 @app.get("/")

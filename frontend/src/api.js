@@ -3,6 +3,12 @@
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
 
+/** Base URL for WebSocket connections (http(s) -> ws(s)). */
+export function wsUrl(path) {
+  const base = API_BASE.replace(/^http/, 'ws')
+  return `${base}${path}`
+}
+
 /**
  * @param {string} path
  * @param {{ method?: string, body?: object }} [init]

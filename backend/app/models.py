@@ -3,7 +3,18 @@
 from collections.abc import Generator
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, create_engine, text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    text,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from app.config import get_settings
@@ -84,6 +95,57 @@ class UserSession(Base):
     )
     token: Mapped[str] = mapped_column(String(512), nullable=False, unique=True, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+
+class SimulationRun(Base):
+    """One executed protocol simulation, owned by the user who ran it.
+
+    Summary columns mirror the fields of protocols.bb84.BB84Result so the
+    run list never has to deserialize the big JSON blob. The full result
+    (every intermediate stage) lives in ``result_json``.
+    """
+
+    __tablename__ = "simulation_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    protocol: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    n_qubits: Mapped[int] = mapped_column(Integer, nullable=False)
+    seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    qber: Mapped[float | None] = mapped_column(Float, nullable=True)
+    aborted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    abort_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sifted_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    final_key_length: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    result_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow, index=True
+    )
+
+
+class ProtocolStageLog(Base):
+    """One completed stage of a simulation run, in execution order.
+
+    Emitted both to the WebSocket (as JSON) and to this table, so a past run
+    can be replayed stage-by-stage from the DB alone.
+    """
+
+    __tablename__ = "protocol_stage_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_id: Mapped[int] = mapped_column(
+        ForeignKey("simulation_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    stage_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    stage_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow
     )

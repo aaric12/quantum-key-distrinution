@@ -249,6 +249,74 @@ h3 {
   box-shadow: inset 0 0 0 1px var(--abort-500);
 }
 
+/* ---- Status primitives --------------------------------------------------
+   Shared instrument furniture used by the console pages: LED dots (round =
+   physical LED, the one place --radius-full is allowed), hairline tags,
+   stat readout lists, and control rows. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.led {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--ink-500);
+}
+
+.led--live {
+  background: var(--live-500);
+  box-shadow: 0 0 6px var(--live-500);
+}
+
+.led--abort {
+  background: var(--abort-500);
+  box-shadow: 0 0 6px var(--abort-500);
+}
+
+.stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.stat dt {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
+.stat dd {
+  margin: 0;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-h2);
+  color: var(--text-hi);
+}
+
+.data--abort {
+  color: var(--abort-500);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.app-header__sub {
+  font-size: var(--fs-small);
+  color: var(--grey-400);
+}
+
 /* ---- Responsive typography / layout helpers ------------------------------- */
 .container {
   width: 100%;
