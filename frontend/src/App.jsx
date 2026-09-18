@@ -1,6 +1,7 @@
 import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
 import Console from './pages/Console.jsx'
+import KeyRate from './pages/KeyRate.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Simulate from './pages/Simulate.jsx'
@@ -56,6 +57,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <Simulate />
+              </RequireAuth>
+            }
+ />
+          <Route
+            path="/keyrate"
+            element={
+              <RequireAuth>
+                <KeyRate />
               </RequireAuth>
             }
  />

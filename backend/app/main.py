@@ -10,6 +10,7 @@ from app import auth, models
 from app.routers import auth as auth_router
 from app.routers import hardware as hardware_router
 from app.routers import health
+from app.routers import keyrate as keyrate_router
 from app.routers import ml as ml_router
 from app.routers import simulate as simulate_router
 
@@ -52,6 +53,7 @@ app.include_router(auth_router.router, tags=["auth"])
 app.include_router(hardware_router.router, tags=["hardware"])
 app.include_router(simulate_router.router, tags=["simulate"])
 app.include_router(ml_router.router, tags=["ml"])
+app.include_router(keyrate_router.router, tags=["keyrate"])
 
 
 @app.get("/")

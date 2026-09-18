@@ -46,6 +46,7 @@ export default function Console() {
           <nav className="console-nav">
             <Link to="/">Console</Link>
             <Link to="/simulate">Simulate</Link>
+            <Link to="/keyrate">Key rate</Link>
           </nav>
           <span className="data">{user?.name}</span>
           <button type="button" className="btn btn--secondary" onClick={onLogout}>

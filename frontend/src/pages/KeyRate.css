@@ -1,0 +1,49 @@
+/* ---- KeyRate page -------------------------------------------------------- */
+.kr-chart {
+  width: 100%;
+  height: auto;
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  background: var(--bg-card, transparent);
+}
+
+.kr-chart__grid {
+  stroke: var(--grey-400);
+  stroke-opacity: 0.25;
+  stroke-dasharray: 2 4;
+}
+
+.kr-chart__tick {
+  fill: var(--grey-400);
+  font-size: 9px;
+  font-family: var(--font-data);
+}
+
+.kr-chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.kr-chart__cutoff {
+  stroke-dasharray: 3 3;
+  stroke-opacity: 0.9;
+}
+
+.kr-chart__cutoff-label {
+  font-size: 9px;
+  font-family: var(--font-data);
+}
+
+.kr-chart__marker {
+  stroke: var(--ink-500);
+  stroke-dasharray: 1 3;
+  stroke-opacity: 0.7;
+}
+
+/* Ghost/reference series render dashed and faded. */
+.kr-chart__line.ghost {
+  stroke-dasharray: 5 4;
+  stroke-opacity: 0.45;
+  stroke-width: 1.5;
+}
