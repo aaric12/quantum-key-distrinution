@@ -119,6 +119,8 @@ class SimulationRun(Base):
     seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
     qber: Mapped[float | None] = mapped_column(Float, nullable=True)
     aborted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    attack_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    attack_intensity: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     abort_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     sifted_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     final_key_length: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

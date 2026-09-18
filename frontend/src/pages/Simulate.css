@@ -209,6 +209,86 @@
   background: var(--abort-500);
 }
 
+/* ---- Attack controls ------------------------------------------------------ */
+.field--wide {
+  flex: 1;
+  min-width: 180px;
+}
+
+.range {
+  width: 100%;
+  height: 24px;
+  accent-color: var(--live-500);
+  background: transparent;
+  cursor: pointer;
+}
+
+.range:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---- PNS decoy statistics -------------------------------------------------- */
+.pns-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--ink-900);
+}
+
+.pns-levels {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.pns-levels li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-family: var(--font-data);
+  font-size: var(--fs-small);
+}
+
+/* ---- QBER line chart (inline SVG, no library) ------------------------------ */
+.qber-chart {
+  width: 100%;
+  height: auto;
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--ink-900);
+}
+
+.qber-chart__line {
+  fill: none;
+  stroke: var(--live-500);
+  stroke-width: 1.5;
+}
+
+.qber-chart__pt {
+  fill: var(--live-500);
+}
+
+.qber-chart__pt--abort {
+  fill: var(--abort-500);
+}
+
+.qber-chart__threshold {
+  stroke: var(--abort-500);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.qber-chart__label {
+  fill: var(--abort-500);
+  font-family: var(--font-data);
+  font-size: 9px;
+}
+
 /* ---- Abort note / errors -------------------------------------------------- */
 .abort-note {
   margin-top: var(--space-3);

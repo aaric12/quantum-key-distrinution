@@ -41,6 +41,57 @@ const STAGE_LABELS = {
 const QBER_THRESHOLD = 0.11
 
 /**
+ * Lightweight inline SVG line chart of QBER per run. Y axis fixed at 0-35%
+ * so consecutive runs stay comparable; the threshold line sits at 11%.
+ * No chart library: one <polyline> over scaled points, aborts in red.
+ */
+function QberChart({ data }) {
+  if (data.length === 0) {
+    return <p className="history-empty">run a simulation to plot QBER.</p>
+  }
+  const W = 320
+  const H = 120
+  const PAD = 4
+  const Y_MAX = 0.35
+  const x = (i) =>
+    PAD + (i / Math.max(1, data.length - 1)) * (W - 2 * PAD)
+  const y = (q) => H - PAD - (Math.min(q, Y_MAX) / Y_MAX) * (H - 2 * PAD)
+  const points = data.map((d, i) => `${x(i)},${y(d.qber)}`).join(' ')
+  const thresholdY = y(QBER_THRESHOLD)
+  return (
+    <svg
+      className="qber-chart"
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label="QBER per run line chart"
+    >
+      <line
+        x1={PAD}
+        x2={W - PAD}
+        y1={thresholdY}
+        y2={thresholdY}
+        className="qber-chart__threshold"
+      />
+      <text x={W - PAD} y={thresholdY - 3} textAnchor="end" className="qber-chart__label">
+        11%
+      </text>
+      <polyline points={points} className="qber-chart__line" />
+      {data.map((d, i) => (
+        <circle
+          key={d.runId ?? i}
+          cx={x(i)}
+          cy={y(d.qber)}
+          r={2.5}
+          className={d.aborted ? 'qber-chart__pt qber-chart__pt--abort' : 'qber-chart__pt'}
+        >
+          <title>{`run #${d.runId ?? '?'}: ${(d.qber * 100).toFixed(1)}%${d.aborted ? ' (abort)' : ''}`}</title>
+        </circle>
+      ))}
+    </svg>
+  )
+}
+
+/**
  * Build the eight timeline rows in pipeline order. Known stages carry their
  * streamed summary; not-yet-received ones sit in the pending state.
  */
@@ -77,6 +128,10 @@ export default function Simulate() {
   const [history, setHistory] = useState([])
   const [nQubits, setNQubits] = useState('256')
   const [protocol, setProtocol] = useState('bb84')
+  const [attackType, setAttackType] = useState('none')
+  const [attackIntensity, setAttackIntensity] = useState(50) // slider 0-100
+  const [qberHistory, setQberHistory] = useState([]) // {runId, qber, aborted}
+  const [pnsStats, setPnsStats] = useState(null)
 
   // wsRef holds the live WebSocket so unmount can close it; aliveRef marks
   // whether the current connection should still drive state (StrictMode
@@ -107,6 +162,9 @@ export default function Simulate() {
       next.set(msg.stage_name, { summary: msg.summary, status: 'done' })
       return next
     })
+    if (msg.stage_name === 'channel' && msg.data?.pns) {
+      setPnsStats(msg.data.pns)
+    }
   }, [])
 
   const handleDone = useCallback(
@@ -114,6 +172,10 @@ export default function Simulate() {
       setSummary({ ...data, runId })
       setRunInfo({ runId, transport })
       setRunning(false)
+      setQberHistory((prev) => [
+        ...prev,
+        { runId, qber: data.qber ?? 0, aborted: Boolean(data.aborted) },
+      ])
       loadHistory()
     },
     [loadHistory],
@@ -123,6 +185,7 @@ export default function Simulate() {
   const runOverWebSocket = useCallback(() => {
     setStageMap(new Map())
     setSummary(null)
+    setPnsStats(null)
     setRunInfo({ runId: null, transport: 'ws' })
     setError(null)
     setRunning(true)
@@ -132,7 +195,14 @@ export default function Simulate() {
     aliveRef.current = true
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'run', n_qubits: Number(nQubits) || 256 }))
+      ws.send(
+        JSON.stringify({
+          type: 'run',
+          n_qubits: Number(nQubits) || 256,
+          attack_type: attackType === 'none' ? null : attackType,
+          attack_intensity: attackIntensity / 100,
+        }),
+      )
     }
     ws.onmessage = (event) => {
       if (!aliveRef.current) return // stale socket from a previous mount
@@ -165,19 +235,24 @@ export default function Simulate() {
       }
       if (wsRef.current === ws) wsRef.current = null
     }
-  }, [protocol, nQubits, applyStageMessage, handleDone])
+  }, [protocol, nQubits, attackType, attackIntensity, applyStageMessage, handleDone])
 
   /** Fallback path: one POST, then replay the returned stage list. */
   const runOverRest = useCallback(async () => {
     setStageMap(new Map())
     setSummary(null)
+    setPnsStats(null)
     setRunInfo({ runId: null, transport: 'rest' })
     setError(null)
     setRunning(true)
 
     const { ok, status, data } = await api(`/simulate/${protocol}`, {
       method: 'POST',
-      body: { n_qubits: Number(nQubits) || 256 },
+      body: {
+        n_qubits: Number(nQubits) || 256,
+        attack_type: attackType === 'none' ? null : attackType,
+        attack_intensity: attackIntensity / 100,
+      },
     })
     if (!aliveRef.current) return
     if (!ok) {
@@ -201,7 +276,7 @@ export default function Simulate() {
       data.id,
       'rest',
     )
-  }, [protocol, nQubits, applyStageMessage, handleDone])
+  }, [protocol, nQubits, attackType, attackIntensity, applyStageMessage, handleDone])
 
   const onRun = () => {
     if (running) return
@@ -281,6 +356,38 @@ export default function Simulate() {
             <button type="button" className="btn btn--primary" onClick={onRun} disabled={running}>
               {running ? 'Running…' : 'Run BB84'}
             </button>
+            <div className="field">
+              <label className="field__label" htmlFor="attack">
+                Attack
+              </label>
+              <select
+                id="attack"
+                className="input"
+                value={attackType}
+                onChange={(e) => setAttackType(e.target.value)}
+                disabled={running}
+              >
+                <option value="none">none (ideal channel)</option>
+                <option value="intercept_resend">intercept-resend</option>
+                <option value="pns">PNS (decoy states)</option>
+                <option value="trojan">trojan-horse (model)</option>
+              </select>
+            </div>
+            <div className="field field--wide">
+              <label className="field__label" htmlFor="intensity">
+                Intensity <span className="data">{attackIntensity}%</span>
+              </label>
+              <input
+                id="intensity"
+                className="range"
+                type="range"
+                min="0"
+                max="100"
+                value={attackIntensity}
+                onChange={(e) => setAttackIntensity(Number(e.target.value))}
+                disabled={running}
+              />
+            </div>
             <button type="button" className="btn btn--secondary" onClick={runOverRest} disabled={running}>
               Run via REST
             </button>
@@ -304,6 +411,28 @@ export default function Simulate() {
               </li>
             ))}
           </ol>
+
+          {pnsStats ? (
+            <div className="pns-panel">
+              <p className="timeline__summary">
+                PNS decoy loss rates — spread {pnsStats.observed_spread?.toFixed(3)} vs noise
+                floor {pnsStats.noise_floor?.toFixed(3)} →{' '}
+                <span className={pnsStats.flagged ? 'data data--abort' : 'data data--live'}>
+                  {pnsStats.anomaly_z?.toFixed(1)}σ {pnsStats.flagged ? 'FLAGGED' : 'clean'}
+                </span>
+              </p>
+              <ul className="pns-levels">
+                {pnsStats.levels?.map((lvl) => (
+                  <li key={lvl.mu}>
+                    <span className="data">μ={lvl.mu.toFixed(4)}</span>
+                    <span className="data">
+                      loss {(lvl.loss_rate * 100).toFixed(1)}% ({lvl.lost}/{lvl.sent})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {error ? <p className="sim-error">{error}</p> : null}
         </section>
@@ -330,6 +459,12 @@ export default function Simulate() {
                 </dd>
               </div>
               <div className="readout">
+                <dt>attack</dt>
+                <dd className={`data ${aborted ? 'data--abort' : ''}`}>
+                  {attackType === 'none' ? '—' : `${attackType} @ ${attackIntensity}%`}
+                </dd>
+              </div>
+              <div className="readout">
                 <dt>sifted keys</dt>
                 <dd className="data">{summary ? summary.sifted_count : '—'}</dd>
               </div>
@@ -340,7 +475,14 @@ export default function Simulate() {
                 </dd>
               </div>
             </dl>
+          </section>
 
+          <section className="card">
+            <div className="card__head">
+              <h2>QBER across runs</h2>
+              <span className="tag">{qberHistory.length} pt{qberHistory.length === 1 ? '' : 's'}</span>
+            </div>
+            <QberChart data={qberHistory} />
             <div className="gauge" role="img" aria-label={`QBER gauge: ${qberPct ?? 'no data'} percent`}>
               <span
                 className={`gauge__fill ${aborted ? 'gauge__fill--abort' : ''}`}
@@ -348,7 +490,6 @@ export default function Simulate() {
               />
               <span className="gauge__threshold" style={{ left: `${(QBER_THRESHOLD / 0.25) * 100}%` }} />
             </div>
-
             {aborted ? <p className="abort-note">{summary?.abort_reason}</p> : null}
           </section>
 

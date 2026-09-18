@@ -45,6 +45,7 @@ import numpy as np
 
 from app.protocols.bb84 import (
     KEY_CONFIRM_HASH_BITS,
+    LOST,
     QBER_ABORT_THRESHOLD,
     Rng,
     channel,
@@ -89,6 +90,9 @@ class B92Result:
     final_key_alice: list[int]
     final_key_bob: list[int]
     aborted: bool
+    attack_type: str | None = None
+    attack_intensity: float = 0.0
+    attack_stats: dict | None = None
     abort_reason: str | None = None
     notes: list[str] = field(default_factory=list)
 
@@ -114,7 +118,9 @@ def measure_b92(
     """
     outcomes: list[int] = []
     for (prep_basis, eigenvalue), meas_basis in zip(qubits, bob_bases):
-        if meas_basis == prep_basis:
+        if prep_basis == LOST:
+            outcomes.append(-1)  # vacuum: no photon, no detection event
+        elif meas_basis == prep_basis:
             outcomes.append(int(eigenvalue))
         else:
             outcomes.append(int(rng.integers(2)))
@@ -141,6 +147,8 @@ def sift_conclusive(
     sifted_alice: list[int] = []
     sifted_bob: list[int] = []
     for a_bit, basis, outcome in zip(alice_bits, bob_bases, bob_outcomes):
+        if outcome == -1:
+            continue  # lost pulse: no detection, never conclusive
         if outcome != 1:
             continue  # inconclusive: both signal states could have produced it
         sifted_alice.append(int(a_bit))
@@ -152,7 +160,9 @@ def run_b92(
     n_qubits: int = 256,
     seed: int | None = None,
     noise: float = 0.0,
-    channel_hook: Callable[[list[tuple[int, int]], Rng], list[tuple[int, int]]] | None = None,
+    channel_hook: Callable[..., list] | None = None,
+    attack_type: str | None = None,
+    attack_intensity: float = 0.0,
 ) -> B92Result:
     """Run one full B92 exchange and return every intermediate stage."""
     if n_qubits < 16:
@@ -164,9 +174,14 @@ def run_b92(
     alice_states = [Z if bit == 0 else X for bit in alice_bits]
     qubits = encode_b92(alice_bits)
 
-    # 2. Channel hook (no-op pass-through on the ideal channel)
+    # 2. Channel hook (no-op pass-through on the ideal channel). Attacks may
+    # return (qubits, stats); unpack stats when present.
     hook = channel_hook if channel_hook is not None else (lambda q, r: channel(q, r, noise=noise))
-    received = hook(qubits, rng)
+    hook_out = hook(qubits, rng)
+    if isinstance(hook_out, tuple):
+        received, attack_stats = hook_out
+    else:
+        received, attack_stats = hook_out, None
 
     # 3. Bob: independent random bases; mark conclusive vs inconclusive
     bob_bases = rng.integers(2, size=n_qubits).tolist()
@@ -179,6 +194,11 @@ def run_b92(
     # 4. Sifting — B92 conclusive-outcome rule (not basis matching)
     sifted_alice, sifted_bob = sift_conclusive(alice_bits, bob_bases, bob_outcomes)
     notes: list[str] = []
+    if attack_stats is not None:
+        notes.append(
+            f"attack '{attack_type}' (intensity {attack_intensity:.2f}): "
+            f"{sum(1 for q in received if q[0] == LOST)} qubit(s) suppressed"
+        )
 
     # 5. QBER from a revealed ~15% sample (sample then discarded)
     qber, sample_indices, sample_alice, sample_bob, n_errors = estimate_qber(
@@ -212,6 +232,9 @@ def run_b92(
             final_key_alice=[],
             final_key_bob=[],
             aborted=True,
+            attack_type=attack_type,
+            attack_intensity=attack_intensity,
+            attack_stats=attack_stats,
             abort_reason=(
                 f"QBER {qber:.3f} exceeds security threshold "
                 f"{QBER_ABORT_THRESHOLD:.2f} — channel assumed compromised, key discarded"
@@ -251,6 +274,9 @@ def run_b92(
             final_key_alice=[],
             final_key_bob=[],
             aborted=True,
+            attack_type=attack_type,
+            attack_intensity=attack_intensity,
+            attack_stats=attack_stats,
             abort_reason=(
                 "error correction failed to converge — public key confirmation "
                 "hash mismatch, corrected keys discarded"
@@ -283,6 +309,9 @@ def run_b92(
         final_key_alice=final_key_alice,
         final_key_bob=final_key_bob,
         aborted=False,
+        attack_type=attack_type,
+        attack_intensity=attack_intensity,
+        attack_stats=attack_stats,
         abort_reason=None,
         notes=notes,
     )

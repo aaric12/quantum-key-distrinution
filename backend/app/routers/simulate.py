@@ -35,6 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import auth
+from app.attacks import ATTACKS, make_hook
 from app.models import ProtocolStageLog, SimulationRun, get_db
 from app.protocols.b92 import B92Result, run_b92
 from app.protocols.bb84 import BB84Result, run_bb84
@@ -55,6 +56,8 @@ class RunIn(BaseModel):
     n_qubits: int = 256
     seed: int | None = None
     noise: float = 0.0
+    attack_type: str | None = None  # None | intercept_resend | pns | trojan
+    attack_intensity: float = 0.0  # 0.0-1.0; meaning per attack
 
 
 class SimulationRunOut(BaseModel):
@@ -66,6 +69,8 @@ class SimulationRunOut(BaseModel):
     seed: int | None
     qber: float | None
     aborted: bool
+    attack_type: str | None
+    attack_intensity: float
     abort_reason: str | None
     sifted_count: int
     final_key_length: int
@@ -98,12 +103,20 @@ class StageMessage(BaseModel):
 # Stage extraction — the shared spine of both endpoints
 # ---------------------------------------------------------------------------
 
+
+def _channel_stage_data(result: Any) -> dict:
+    """Channel-stage payload, extended with PNS decoy statistics when present."""
+    data: dict[str, Any] = {"n_qubits": len(result.alice_bits)}
+    if getattr(result, "attack_stats", None):
+        data["pns"] = result.attack_stats
+    return data
+
+
 # Stage selectors shared by every PM protocol: after sifting, the pipeline
 # shape is identical, and BB84's alice_bases doubles as B92's alice_states.
 # Protocol-specific stages (BB84 basis matching vs B92 conclusive outcomes)
 # come first, then the common tail.
 _COMMON_STAGES: list[tuple[str, Any]] = [
-    ("channel", lambda r: {"n_qubits": len(r.alice_bits)}),
     ("bob_measure", ["bob_bases", "bob_bits", "bob_outcomes", "bob_inferred"]),
     ("sifting", ["sifted_alice", "sifted_bob"]),
     (
@@ -128,10 +141,12 @@ _COMMON_STAGES: list[tuple[str, Any]] = [
 STAGES: dict[str, list[tuple[str, Any]]] = {
     "bb84": [
         ("alice_encode", ["alice_bits", "alice_bases"]),
+        ("channel", _channel_stage_data),
         *_COMMON_STAGES,
     ],
     "b92": [
         ("alice_encode", ["alice_bits", "alice_states"]),
+        ("channel", _channel_stage_data),
         *_COMMON_STAGES,
     ],
 }
@@ -245,6 +260,8 @@ def persist_run(
         seed=req.seed,
         qber=result.qber,
         aborted=result.aborted,
+        attack_type=result.attack_type,
+        attack_intensity=result.attack_intensity,
         abort_reason=result.abort_reason,
         sifted_count=len(result.sifted_alice),
         final_key_length=len(result.final_key_alice),
@@ -310,7 +327,14 @@ def run_protocol_sync(
     """Run the full pipeline once, persist it, and return every stage."""
     run_fn, result_type = _protocol_or_404(protocol)
     _validated(req)
-    result = run_fn(n_qubits=req.n_qubits, seed=req.seed, noise=req.noise)
+    result = run_fn(
+        n_qubits=req.n_qubits,
+        seed=req.seed,
+        noise=req.noise,
+        channel_hook=make_hook(req.attack_type, req.attack_intensity),
+        attack_type=req.attack_type,
+        attack_intensity=req.attack_intensity,
+    )
     stage_msgs = build_stage_messages(protocol, result)
     run = persist_run(
         db, user_id=user.id, protocol=protocol, req=req, result=result, stage_msgs=stage_msgs
@@ -375,7 +399,14 @@ async def ws_protocol(
     # the next is produced. Persistence happens after the final frame so the
     # socket never blocks on the database mid-stream.
     try:
-        result = run_fn(n_qubits=req.n_qubits, seed=req.seed, noise=req.noise)
+        result = run_fn(
+            n_qubits=req.n_qubits,
+            seed=req.seed,
+            noise=req.noise,
+            channel_hook=make_hook(req.attack_type, req.attack_intensity),
+            attack_type=req.attack_type,
+            attack_intensity=req.attack_intensity,
+        )
         stage_msgs = build_stage_messages(protocol, result)
         for msg in stage_msgs:
             await ws.send_json(msg.model_dump())
@@ -451,6 +482,13 @@ def _validated(req: RunIn) -> RunIn:
         raise HTTPException(status_code=422, detail="n_qubits must be <= 10000")
     if not 0.0 <= req.noise <= 1.0:
         raise HTTPException(status_code=422, detail="noise must be within [0, 1]")
+    if req.attack_type not in (None, "", "none") and req.attack_type not in ATTACKS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown attack '{req.attack_type}'. Available: {sorted(ATTACKS)}",
+        )
+    if not 0.0 <= req.attack_intensity <= 1.0:
+        raise HTTPException(status_code=422, detail="attack_intensity must be within [0, 1]")
     return req
 
 

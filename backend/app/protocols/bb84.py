@@ -44,6 +44,10 @@ ERROR_CORRECTION_MAX_PASSES = 12  # permutation passes while errors keep appeari
 # many bits about the corrected key and is charged to the PA budget.
 KEY_CONFIRM_HASH_BITS = 32
 
+# Sentinel for a pulse lost/suppressed in the quantum channel (PNS attack).
+# A LOST entry never produces a sifted position: Bob detects nothing there.
+LOST = -1
+
 Rng = np.random.Generator
 
 
@@ -71,6 +75,9 @@ class BB84Result:
     final_key_alice: list[int]
     final_key_bob: list[int]
     aborted: bool
+    attack_type: str | None = None
+    attack_intensity: float = 0.0
+    attack_stats: dict | None = None
     abort_reason: str | None = None
     notes: list[str] = field(default_factory=list)
 
@@ -114,10 +121,14 @@ def measure_qubits(
 
     Same basis as preparation -> the encoded bit, deterministically.
     Wrong basis -> the state is destroyed and a fair coin is observed.
+    A LOST pulse produces no detection (vacuum): recorded as -1 and dropped
+    from sifting.
     """
     bob_bits: list[int] = []
     for (prep_basis, bit), meas_basis in zip(qubits, bob_bases):
-        if meas_basis == prep_basis:
+        if prep_basis == LOST:  # vacuum pulse: no photon, no detection
+            bob_bits.append(-1)
+        elif meas_basis == prep_basis:
             bob_bits.append(int(bit))
         else:
             bob_bits.append(int(rng.integers(2)))
@@ -130,11 +141,12 @@ def sift(
     alice_bits: Sequence[int],
     bob_bits: Sequence[int],
 ) -> tuple[list[int], list[int]]:
-    """Keep only positions where Alice and Bob happened to use the same basis."""
+    """Keep only positions where Alice and Bob happened to use the same basis
+    *and* Bob actually detected a pulse (not LOST)."""
     sifted_alice: list[int] = []
     sifted_bob: list[int] = []
     for a_b, b_b, a_bit, b_bit in zip(alice_bases, bob_bases, alice_bits, bob_bits):
-        if a_b == b_b:
+        if a_b == b_b and b_bit != -1:
             sifted_alice.append(int(a_bit))
             sifted_bob.append(int(b_bit))
     return sifted_alice, sifted_bob
@@ -302,7 +314,9 @@ def run_bb84(
     n_qubits: int = 256,
     seed: int | None = None,
     noise: float = 0.0,
-    channel_hook: Callable[[list[tuple[int, int]], Rng], list[tuple[int, int]]] | None = None,
+    channel_hook: Callable[..., list] | None = None,
+    attack_type: str | None = None,
+    attack_intensity: float = 0.0,
 ) -> BB84Result:
     """Run one full BB84 exchange and return every intermediate stage."""
     if n_qubits < 16:
@@ -314,9 +328,14 @@ def run_bb84(
     alice_bases = rng.integers(2, size=n_qubits).tolist()
     qubits = encode_qubits(alice_bits, alice_bases)
 
-    # 2. Channel hook (no-op pass-through on the ideal channel)
+    # 2. Channel hook (no-op pass-through on the ideal channel). Attacks may
+    # return (qubits, stats); unpack stats when present.
     hook = channel_hook if channel_hook is not None else (lambda q, r: channel(q, r, noise=noise))
-    received = hook(qubits, rng)
+    hook_out = hook(qubits, rng)
+    if isinstance(hook_out, tuple):
+        received, attack_stats = hook_out
+    else:
+        received, attack_stats = hook_out, None
 
     # 3. Bob: independent random bases, measures accordingly
     bob_bases = rng.integers(2, size=n_qubits).tolist()
@@ -325,6 +344,11 @@ def run_bb84(
     # 4. Sifting — mandatory
     sifted_alice, sifted_bob = sift(alice_bases, bob_bases, alice_bits, bob_bits)
     notes: list[str] = []
+    if attack_stats is not None:
+        notes.append(
+            f"attack '{attack_type}' (intensity {attack_intensity:.2f}): "
+            f"{len(received) - sum(1 for q in received if q[0] != LOST)} qubit(s) suppressed"
+        )
 
     # 5. QBER from a revealed ~15% sample (sample then discarded)
     qber, sample_indices, sample_alice, sample_bob, n_errors = estimate_qber(
@@ -357,6 +381,9 @@ def run_bb84(
             final_key_alice=[],
             final_key_bob=[],
             aborted=True,
+            attack_type=attack_type,
+            attack_intensity=attack_intensity,
+            attack_stats=attack_stats,
             abort_reason=(
                 f"QBER {qber:.3f} exceeds security threshold "
                 f"{QBER_ABORT_THRESHOLD:.2f} — channel assumed compromised, key discarded"
@@ -396,6 +423,9 @@ def run_bb84(
             final_key_alice=[],
             final_key_bob=[],
             aborted=True,
+            attack_type=attack_type,
+            attack_intensity=attack_intensity,
+            attack_stats=attack_stats,
             abort_reason=(
                 "error correction failed to converge — public key confirmation "
                 "hash mismatch, corrected keys discarded"
@@ -428,6 +458,9 @@ def run_bb84(
         final_key_alice=final_key_alice,
         final_key_bob=final_key_bob,
         aborted=False,
+        attack_type=attack_type,
+        attack_intensity=attack_intensity,
+        attack_stats=attack_stats,
         abort_reason=None,
         notes=notes,
     )
