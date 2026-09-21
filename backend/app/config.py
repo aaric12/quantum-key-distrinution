@@ -5,6 +5,14 @@ from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+# Local Vite dev server + `vite preview` ports.
+_DEFAULT_CORS_ORIGINS = (
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173,"
+    "http://localhost:4173,"
+    "http://127.0.0.1:4173"
+)
+
 
 class Settings(BaseSettings):
     app_name: str = "qkd-backend"
@@ -30,9 +38,27 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_base_url: str = "https://api.openai.com/v1"
 
+    # CORS origins the browser frontend may call the API from. Comma-separated
+    # via ALLOWED_ORIGINS, e.g. "https://app.example.com,https://staging.example.com".
+    # Unset or blank -> the local Vite dev/preview defaults (localhost:5173/4173).
+    allowed_origins: str = _DEFAULT_CORS_ORIGINS
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def cors_origins(settings: Settings | None = None) -> list[str]:
+    """ALLOWED_ORIGINS split on commas into an origin list for CORSMiddleware.
+
+    Whitespace and empty entries are dropped, so "a.com, b.com,," works.
+    Blank/unset falls back to the localhost defaults (docker-compose passes
+    the variable through, so "unset" arrives here as an empty string).
+    """
+    raw = (settings or get_settings()).allowed_origins.strip()
+    if not raw:
+        raw = _DEFAULT_CORS_ORIGINS
+    return [o.strip() for o in raw.split(",") if o.strip()]

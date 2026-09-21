@@ -7,6 +7,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app import auth, models
+from app.config import cors_origins
 from app.routers import auth as auth_router
 from app.routers import hardware as hardware_router
 from app.routers import health
@@ -34,15 +35,11 @@ app.state.limiter = auth.limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
-# CORS for local dev (Vite default ports)
+# CORS: origins come from ALLOWED_ORIGINS (comma-separated). Unset, it
+# falls back to the local Vite dev/preview defaults (localhost:5173/4173).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",  # vite preview
-        "http://127.0.0.1:4173",  # vite preview on the loopback IP
-    ],
+    allow_origins=cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
