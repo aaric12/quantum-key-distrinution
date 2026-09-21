@@ -85,7 +85,7 @@ def _set_session_cookie(
         expires=max_age,
         httponly=True,
         secure=request.url.scheme == "https",
-        samesite="lax",
+        samesite=settings.session_cookie_samesite,
         path="/",
     )
 
@@ -95,7 +95,7 @@ def _clear_session_cookie(response: Response) -> None:
         key=settings.session_cookie_name,
         path="/",
         httponly=True,
-        samesite="lax",
+        samesite=settings.session_cookie_samesite,
     )
 
 

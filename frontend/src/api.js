@@ -3,9 +3,14 @@
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
 
-/** Base URL for WebSocket connections (http(s) -> ws(s)). */
+/** Base URL for WebSocket connections (http(s) -> ws(s)).
+ *
+ * https must be rewritten to wss BEFORE the ^http rule: browsers block
+ * insecure ws:// handshakes from https:// pages (mixed content), which is
+ * exactly what the old single replace produced for an https API base.
+ * */
 export function wsUrl(path) {
-  const base = API_BASE.replace(/^http/, 'ws')
+  const base = API_BASE.replace(/^https/, 'wss').replace(/^http/, 'ws')
   return `${base}${path}`
 }
 

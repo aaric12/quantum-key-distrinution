@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     session_expire_days: int = 7
     session_cookie_name: str = "qkd_session"
+    # SameSite policy for the session cookie. "lax" is right when frontend
+    # and API share a site (local dev, same-origin deploys). A split deploy
+    # (frontend on vercel.app, API on onrender.com) is cross-site: browsers
+    # never attach Lax cookies to cross-site fetch/WS handshakes, so auth
+    # silently fails there — set SESSION_COOKIE_SAMESITE=none on the API
+    # host. Chrome requires Secure with None, which uvicorn derives from
+    # the request scheme; run it with --proxy-headers behind Render's TLS.
+    session_cookie_samesite: str = "lax"
 
     # AI summaries (optional). Any OpenAI-compatible chat-completions API
     # works: point OPENAI_BASE_URL elsewhere (Groq, Together, local vLLM, ...)

@@ -24,6 +24,11 @@ services:
       # Comma-separated browser origins allowed to call the API (CORS).
       # Unset -> localhost:5173/4173 defaults.
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      # "none" when the frontend is on a different site (e.g. Vercel +
+      # Render): SameSite=Lax cookies are never attached to cross-site
+      # fetch/WebSocket handshakes, so auth silently fails there.
+      # Keep "lax" for same-site deploys and local dev.
+      SESSION_COOKIE_SAMESITE: ${SESSION_COOKIE_SAMESITE:-lax}
     ports:
       - "8000:8000"
     depends_on:

@@ -1,6 +1,6 @@
 /* ---- Content pages (Home / Foundations / Protocols / Comparison) --------- */
 
-/* Hero */
+/* Hero — the page's focal point: display-scale title, de-emphasised lede. */
 .hero {
   display: grid;
   gap: var(--space-3);
@@ -17,14 +17,16 @@
 
 .hero__title {
   margin: 0;
-  font-size: var(--fs-h2);
-  line-height: 1.25;
+  font-size: var(--fs-display); /* was --fs-h2: read as one heading among many */
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   color: var(--text-hi);
 }
 
 .hero__lede {
   margin: 0;
   max-width: 62ch;
+  font-size: var(--fs-body); /* pinned explicitly: one clear step under --fs-display */
   color: var(--grey-400);
   line-height: 1.6;
 }
@@ -36,10 +38,17 @@
   margin-top: var(--space-2);
 }
 
+/* CTA hover: the primary button already brightens via base.css; give the
+   ghost-style secondary a reaction too by sinking its fill to the page
+   surface color. Both reuse existing tokens only. */
+.hero__actions .btn--secondary:hover {
+  background: var(--ink-900);
+}
+
 /* Six-step pipeline grid */
 .pipeline-grid {
   list-style: none;
-  margin: 0;
+  margin: var(--space-4) 0 0; /* was flush under the card head */
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -51,7 +60,7 @@
   gap: var(--space-3);
   border: var(--border-hairline);
   border-radius: var(--radius-md);
-  padding: var(--space-3);
+  padding: var(--space-4); /* was --space-3: matched .feature-card, felt cramped */
 }
 
 .pipeline-step__num {
@@ -380,4 +389,16 @@
 /* Content pages hide the auth-only console links when logged out. */
 .muted {
   color: var(--grey-400);
+}
+
+/* ---- Home page rhythm ------------------------------------------------------
+   The global reset zeroes margins, so Home's stacked section cards sat flush
+   against each other with no separation. Scoped under .home (Home.jsx's root
+   element) so no other page importing Content.css is affected. */
+.home > .console-topbar {
+  padding-block: var(--space-4) var(--space-4); /* bottom was 0: hero glued to header */
+}
+
+.home > .card + .card {
+  margin-top: var(--space-4);
 }

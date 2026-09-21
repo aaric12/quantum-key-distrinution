@@ -65,7 +65,7 @@ const PROTOCOL_CARDS = [
 export default function Home() {
   const { user } = useAuth()
   return (
-    <div className="container">
+    <div className="container home">
       <header className="console-topbar">
         <div>
           <h1>Quantum key distribution, from qubits to keys</h1>
