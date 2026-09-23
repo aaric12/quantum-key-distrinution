@@ -78,7 +78,7 @@
 .sitenav__panel {
   position: absolute;
   top: calc(100% + var(--space-2));
-  right: 0;
+  right: -10rem;
   z-index: var(--z-overlay);
   min-width: 180px;
   display: none;
@@ -111,7 +111,7 @@
   border-left: 2px solid var(--live-500);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 620px) {
   .sitenav__row {
     display: flex;
     gap: var(--space-2);
