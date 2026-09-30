@@ -92,6 +92,7 @@ class B92Result:
     aborted: bool
     attack_type: str | None = None
     attack_intensity: float = 0.0
+    noise: float = 0.0  # channel bit-flip probability used for this run
     attack_stats: dict | None = None
     abort_reason: str | None = None
     notes: list[str] = field(default_factory=list)
@@ -175,13 +176,17 @@ def run_b92(
     qubits = encode_b92(alice_bits)
 
     # 2. Channel hook (no-op pass-through on the ideal channel). Attacks may
-    # return (qubits, stats); unpack stats when present.
-    hook = channel_hook if channel_hook is not None else (lambda q, r: channel(q, r, noise=noise))
+    # return (qubits, stats); unpack stats when present. Channel noise is
+    # applied independently of (and additively after) any attack — same
+    # policy as BB84.
+    hook = channel_hook if channel_hook is not None else (lambda q, r: list(q))
     hook_out = hook(qubits, rng)
     if isinstance(hook_out, tuple):
         received, attack_stats = hook_out
     else:
         received, attack_stats = hook_out, None
+    if noise > 0.0:
+        received = channel(received, rng, noise=noise)
 
     # 3. Bob: independent random bases; mark conclusive vs inconclusive
     bob_bases = rng.integers(2, size=n_qubits).tolist()
@@ -234,6 +239,7 @@ def run_b92(
             aborted=True,
             attack_type=attack_type,
             attack_intensity=attack_intensity,
+            noise=noise,
             attack_stats=attack_stats,
             abort_reason=(
                 f"QBER {qber:.3f} exceeds security threshold "
@@ -276,6 +282,7 @@ def run_b92(
             aborted=True,
             attack_type=attack_type,
             attack_intensity=attack_intensity,
+            noise=noise,
             attack_stats=attack_stats,
             abort_reason=(
                 "error correction failed to converge — public key confirmation "
@@ -311,6 +318,7 @@ def run_b92(
         aborted=False,
         attack_type=attack_type,
         attack_intensity=attack_intensity,
+        noise=noise,
         attack_stats=attack_stats,
         abort_reason=None,
         notes=notes,

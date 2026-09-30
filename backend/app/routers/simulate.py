@@ -181,6 +181,10 @@ def _stage_summary(stage_name: str, result: Any) -> str:
     if stage_name == "alice_encode":
         return f"Alice generated {len(result.alice_bits)} random bits + bases (Z/X)"
     if stage_name == "channel":
+        noise = getattr(result, "noise", 0.0) or 0.0
+        if noise > 0:
+            noise_pct = f"{noise * 100:.1f}".rstrip("0").rstrip(".")
+            return f"Quantum channel: qubits transmitted with {noise_pct}% channel noise"
         return "Quantum channel: qubits transmitted"
     if stage_name == "bob_measure":
         measured = getattr(result, "bob_bits", None)

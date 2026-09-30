@@ -137,6 +137,7 @@ export default function Simulate() {
   const [protocol, setProtocol] = useState('bb84')
   const [attackType, setAttackType] = useState('none')
   const [attackIntensity, setAttackIntensity] = useState(50) // slider 0-100
+  const [noise, setNoise] = useState(0) // slider 0-5 (% channel noise, independent of attacks)
   const [qberHistory, setQberHistory] = useState([]) // {runId, qber, aborted}
   const [pnsStats, setPnsStats] = useState(null)
   const [aiSummary, setAiSummary] = useState(null) // {text, source}
@@ -232,6 +233,7 @@ export default function Simulate() {
           n_qubits: Number(nQubits) || 256,
           attack_type: attackType === 'none' ? null : attackType,
           attack_intensity: attackIntensity / 100,
+          noise: noise / 100,
         }),
       )
     }
@@ -269,7 +271,7 @@ export default function Simulate() {
       }
       if (wsRef.current === ws) wsRef.current = null
     }
-  }, [protocol, nQubits, attackType, attackIntensity, applyStageMessage, handleDone])
+  }, [protocol, nQubits, attackType, attackIntensity, noise, applyStageMessage, handleDone])
 
   /** Fallback path: one POST, then replay the returned stage list. */
   const runOverRest = useCallback(async () => {
@@ -288,6 +290,7 @@ export default function Simulate() {
         n_qubits: Number(nQubits) || 256,
         attack_type: attackType === 'none' ? null : attackType,
         attack_intensity: attackIntensity / 100,
+        noise: noise / 100,
       },
     })
     if (data?.ai_summary) {
@@ -315,7 +318,7 @@ export default function Simulate() {
       data.id,
       'rest',
     )
-  }, [protocol, nQubits, attackType, attackIntensity, applyStageMessage, handleDone])
+  }, [protocol, nQubits, attackType, attackIntensity, noise, applyStageMessage, handleDone])
 
   const onRun = () => {
     if (running) return
@@ -536,6 +539,22 @@ export default function Simulate() {
                     max="100"
                     value={attackIntensity}
                     onChange={(e) => setAttackIntensity(Number(e.target.value))}
+                    disabled={running}
+                  />
+                </div>
+                <div className="field field--wide">
+                  <label className="field__label" htmlFor="noise">
+                    Channel noise <span className="data">{noise}%</span>
+                  </label>
+                  <input
+                    id="noise"
+                    className="range"
+                    type="range"
+                    min="0"
+                    max="5"
+                    step="0.5"
+                    value={noise}
+                    onChange={(e) => setNoise(Number(e.target.value))}
                     disabled={running}
                   />
                 </div>

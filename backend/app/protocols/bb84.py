@@ -77,35 +77,36 @@ class BB84Result:
     aborted: bool
     attack_type: str | None = None
     attack_intensity: float = 0.0
+    noise: float = 0.0  # channel bit-flip probability used for this run
     attack_stats: dict | None = None
     abort_reason: str | None = None
     notes: list[str] = field(default_factory=list)
 
 
 def channel(qubits: Sequence[tuple[int, int]], rng: Rng, noise: float = 0.0) -> list[tuple[int, int]]:
-    """Pass-through channel hook for Step-8 attacks.
+    """Per-qubit bit-flip channel noise (independent of any attack).
 
     Parameters
     ----------
     qubits:
-        Encoded (basis, bit) pairs as they leave Alice's lab.
+        (basis, bit) pairs as they are in flight.
     rng:
-        Shared randomness source (attacks may be stochastic).
+        Shared randomness source.
     noise:
-        Optional per-qubit bit-flip probability. 0.0 = ideal channel, i.e. a
-        pure no-op. Exists so the QBER/abort machinery can be exercised
-        without an eavesdropper.
+        Per-qubit bit-flip probability (e.g. 0.02 = 2%). Models realistic
+        non-eavesdropper disturbance — detector dark counts, misalignment —
+        so a clean run shows a small non-zero QBER instead of exactly 0.
 
     Returns
     -------
-    The qubits arriving at Bob.
+    The qubits arriving at their destination.
     """
     if noise <= 0.0:
         return list(qubits)
-    flipped = rng.random(len(qubits)) < noise
+    flips = rng.random(len(qubits)) < noise
     return [
-        (basis, bit ^ 1) if flip else (basis, bit)
-        for (basis, bit), flip in zip(qubits, flipped)
+        (basis, bit ^ 1) if flip and basis != LOST else (basis, bit)
+        for (basis, bit), flip in zip(qubits, flips)
     ]
 
 
@@ -329,13 +330,17 @@ def run_bb84(
     qubits = encode_qubits(alice_bits, alice_bases)
 
     # 2. Channel hook (no-op pass-through on the ideal channel). Attacks may
-    # return (qubits, stats); unpack stats when present.
-    hook = channel_hook if channel_hook is not None else (lambda q, r: channel(q, r, noise=noise))
+    # return (qubits, stats); unpack stats when present. Channel noise is
+    # applied independently of (and additively after) any attack: an attack
+    # replaces the hook, but real-channel disturbance is always present.
+    hook = channel_hook if channel_hook is not None else (lambda q, r: list(q))
     hook_out = hook(qubits, rng)
     if isinstance(hook_out, tuple):
         received, attack_stats = hook_out
     else:
         received, attack_stats = hook_out, None
+    if noise > 0.0:
+        received = channel(received, rng, noise=noise)
 
     # 3. Bob: independent random bases, measures accordingly
     bob_bases = rng.integers(2, size=n_qubits).tolist()
@@ -383,6 +388,7 @@ def run_bb84(
             aborted=True,
             attack_type=attack_type,
             attack_intensity=attack_intensity,
+            noise=noise,
             attack_stats=attack_stats,
             abort_reason=(
                 f"QBER {qber:.3f} exceeds security threshold "
@@ -425,6 +431,7 @@ def run_bb84(
             aborted=True,
             attack_type=attack_type,
             attack_intensity=attack_intensity,
+            noise=noise,
             attack_stats=attack_stats,
             abort_reason=(
                 "error correction failed to converge — public key confirmation "
@@ -460,6 +467,7 @@ def run_bb84(
         aborted=False,
         attack_type=attack_type,
         attack_intensity=attack_intensity,
+        noise=noise,
         attack_stats=attack_stats,
         abort_reason=None,
         notes=notes,

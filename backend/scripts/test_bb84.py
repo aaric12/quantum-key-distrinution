@@ -1,6 +1,10 @@
-"""Run the full BB84 pipeline 20 times with no eavesdropper (ideal channel).
+"""Run the full BB84 pipeline 20 times with no eavesdropper.
 
-Usage:  python scripts/test_bb84.py
+Usage:  python scripts/test_bb84.py [--noise 0.02]
+
+With no --noise argument the channel is ideal (0% noise). A small non-zero
+value (e.g. 0.02 = 2%) should produce a small non-zero QBER without any
+aborts — realistic channels are never perfectly clean.
 """
 
 import sys
@@ -11,10 +15,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.protocols.bb84 import QBER_ABORT_THRESHOLD, run_bb84
 
 N_RUNS = 20
+NOISE = 0.0
+if "--noise" in sys.argv:
+    NOISE = float(sys.argv[sys.argv.index("--noise") + 1])
 
 
 def main() -> None:
-    print(f"BB84 no-eavesdropper simulation — {N_RUNS} runs, 256 qubits each")
+    noise_label = f" | channel noise {NOISE:.1%}" if NOISE > 0 else " | ideal channel"
+    print(f"BB84 no-eavesdropper simulation — {N_RUNS} runs, 256 qubits each{noise_label}")
     print(f"QBER sample: 15% of sifted key | abort threshold: {QBER_ABORT_THRESHOLD:.2f}")
     print("-" * 88)
     header = (
@@ -29,7 +37,7 @@ def main() -> None:
     qbers: list[float] = []
 
     for run in range(1, N_RUNS + 1):
-        res = run_bb84(n_qubits=256, seed=run)
+        res = run_bb84(n_qubits=256, seed=run, noise=NOISE)
 
         match = "n/a" if res.aborted else str(res.final_key_alice == res.final_key_bob)
 

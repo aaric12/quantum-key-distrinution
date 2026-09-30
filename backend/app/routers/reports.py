@@ -108,7 +108,12 @@ def _build_snapshot(db: Session, run: SimulationRun, protocol: str) -> dict[str,
     # same fact shape the simulate endpoints use. asyncio.run is safe here:
     # sync endpoints execute in worker threads with no running loop.
     result_like = SimpleNamespace(**run.result_json)
-    req_like = SimpleNamespace(n_qubits=run.n_qubits, seed=run.seed, noise=None)
+    req_like = SimpleNamespace(
+        n_qubits=run.n_qubits,
+        seed=run.seed,
+        # Older persisted runs lack a noise field in result_json.
+        noise=(run.result_json or {}).get("noise", 0.0),
+    )
     facts = _run_facts(
         protocol, result_like, req_like, ml_pred, ml_probs
     )
