@@ -510,7 +510,11 @@ def _run_facts(
     ml_pred: str | None,
     ml_probs: dict[str, float] | None,
 ) -> dict[str, Any]:
-    """Compact fact sheet handed to the AI summarizer."""
+    """Compact fact sheet handed to the AI summarizer.
+
+    ``noise`` and ``pns_stats`` (the decoy-loss table) let the summary
+    explain the run's actual mechanism instead of restating the outcome.
+    """
     return {
         "protocol": protocol,
         "n_qubits": req.n_qubits,
@@ -521,6 +525,8 @@ def _run_facts(
         "abort_reason": result.abort_reason,
         "sifted_count": len(result.sifted_alice),
         "final_key_length": len(result.final_key_alice),
+        "noise": req.noise,
+        "pns_stats": getattr(result, "attack_stats", None),
         "ml_predicted_class": ml_pred,
         "ml_probabilities": ml_probs,
     }
