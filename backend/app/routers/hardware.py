@@ -17,6 +17,7 @@ Security contract for the IBM token:
 """
 
 import asyncio
+import logging
 from types import SimpleNamespace
 from typing import Annotated
 
@@ -44,6 +45,11 @@ from app.hardware import (
 from app.models import HardwareJob, SessionLocal
 
 router = APIRouter(tags=["hardware"])
+
+# Only used to record why a submission failed (token never included — see
+# module docstring). Without this, a submit-path exception surfaces as a 502
+# with no server-side trace at all.
+logger = logging.getLogger(__name__)
 
 # Stricter than the simulator endpoints: real-hardware submissions cost the
 # user real quota. Keyed per client address by slowapi.
@@ -138,6 +144,16 @@ async def submit_hardware_run(
             payload.ibm_token,
         )
     except Exception as exc:  # noqa: BLE001 — never echo provider error text
+        # Log the exception class + message so the failure is diagnosable in
+        # host logs (Render). The message may embed provider error text but
+        # never the token: QiskitRuntimeService does not interpolate the
+        # token into its exceptions.
+        logger.exception(
+            "hardware submission failed for job row %s (%s: %s)",
+            row_id,
+            type(exc).__name__,
+            exc,
+        )
         db = SessionLocal()
         try:
             row = db.get(HardwareJob, row_id)
