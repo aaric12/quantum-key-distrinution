@@ -1,5 +1,6 @@
 """Shared SQLAlchemy setup and models for the QKD backend."""
 
+import logging
 from collections.abc import Generator
 from datetime import UTC, datetime
 
@@ -43,8 +44,20 @@ def create_all() -> None:
 
     Good enough while the schema is small; swap for Alembic migrations when
     it grows.
+
+    Non-fatal when the database is unreachable: local development without a
+    running Postgres still boots, serves everything except
+    persistence-dependent endpoints, and /health reports "degraded" (see
+    check_db). Previously a compose-provided Postgres guaranteed a DB at
+    startup; the plain venv + uvicorn path has no such guarantee.
     """
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:  # noqa: BLE001 - startup must survive a missing DB
+        logging.getLogger(__name__).warning(
+            "create_all() skipped: database unreachable (%s)",
+            exc.__class__.__name__,
+        )
 
 
 def check_db() -> str:

@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     app_name: str = "qkd-backend"
     debug: bool = False
 
-    # Postgres in docker-compose; override via env DATABASE_URL if needed.
+    # Local Postgres default; override via env DATABASE_URL if needed.
     database_url: str = "postgresql+psycopg://qkd:qkd@localhost:5432/qkd"
 
     # Auth. JWT_SECRET has NO default: the app refuses to start without it
@@ -63,8 +63,7 @@ def cors_origins(settings: Settings | None = None) -> list[str]:
     """ALLOWED_ORIGINS split on commas into an origin list for CORSMiddleware.
 
     Whitespace and empty entries are dropped, so "a.com, b.com,," works.
-    Blank/unset falls back to the localhost defaults (docker-compose passes
-    the variable through, so "unset" arrives here as an empty string).
+    Blank/unset falls back to the localhost defaults.
     """
     raw = (settings or get_settings()).allowed_origins.strip()
     if not raw:

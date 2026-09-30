@@ -13,28 +13,7 @@ model). Nothing else is claimed.
 
 ---
 
-## Quick start (Docker)
-
-```bash
-# 1. Generate a JWT secret and export it (compose refuses to start without it)
-export JWT_SECRET=$(python -c "import secrets; print(secrets.token_urlsafe(48))")
-
-# 2. Bring up Postgres + backend
-docker compose up --build
-```
-
-- Backend: http://localhost:8000 — Swagger docs: http://localhost:8000/docs
-- Health: http://localhost:8000/health
-- Postgres: localhost:5432 (user/pass/db: `qkd`/`qkd`/`qkd`)
-- Frontend is **not** containerized; run it separately (see below):
-
-```bash
-cd frontend
-npm install
-npm run dev          # http://localhost:5173
-```
-
-## Run locally without Docker
+## Quick start
 
 **Backend** (Python 3.11+):
 
@@ -47,8 +26,8 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Without a database, `/health` reports `"degraded"` — the API still serves
-everything except persistence-dependent endpoints. To run just Postgres:
-`docker compose up -d db`.
+everything except persistence-dependent endpoints. To run with a database,
+point `DATABASE_URL` at any Postgres instance (local or hosted, e.g. Neon).
 
 **Frontend** (Node 18+): `cd frontend && npm install && npm run dev` →
 http://localhost:5173 (configure the backend URL with `VITE_API_BASE`).
@@ -57,8 +36,8 @@ http://localhost:5173 (configure the backend URL with `VITE_API_BASE`).
 
 | Variable | Service | Required | Purpose |
 | --- | --- | --- | --- |
-| `JWT_SECRET` | backend | **Yes — no default; the backend refuses to start without it.** When using docker-compose, export it in your shell (or a compose `.env` file); the compose file errors out without it. | Signs the JWT session cookie. Generate: `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
-| `DATABASE_URL` | backend | No (default `postgresql+psycopg://qkd:qkd@localhost:5432/qkd`; compose sets it to the `db` service) | SQLAlchemy database URL |
+| `JWT_SECRET` | backend | **Yes — no default; the backend refuses to start without it.** | Signs the JWT session cookie. Generate: `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `DATABASE_URL` | backend | No (default `postgresql+psycopg://qkd:qkd@localhost:5432/qkd`) | SQLAlchemy database URL |
 | `OPENAI_API_KEY` | backend | No (empty) | **LLM API key** for AI run summaries. Any OpenAI-compatible chat API works: set `OPENAI_BASE_URL` (default `https://api.openai.com/v1`) and `OPENAI_MODEL` (default `gpt-4o-mini`). Without a key, deterministic rule-based fallback summaries are served and responses are labeled `summary_source: "fallback"`. |
 | `VITE_API_BASE` | frontend | No (default `http://localhost:8000`) | Backend base URL used by the browser |
 | `IBM token` | — | Per request | The IBM Quantum token for hardware runs is **not** an env var: it is pasted into the Simulate page per submission, kept in memory only, never stored or logged (see `backend/app/hardware.py`). |
@@ -163,9 +142,8 @@ backend/
     ai_summary.py    LLM/fallback run summaries
     report_pdf.py    reportlab PDF rendering
   scripts/           test_bb84.py, test_attacks.py sanity sweeps
-  requirements.txt, Dockerfile, .env.example
+  requirements.txt, runtime.txt, .env.example
 frontend/            Vite + React (JavaScript, plain CSS), pages in src/pages
-docker-compose.yml   Postgres + backend
 ```
 
 ## Known limitations
@@ -174,8 +152,6 @@ docker-compose.yml   Postgres + backend
   pages only. They are never presented as runnable.
 - The trojan-horse attack is a conceptual model (see honesty table), as are the
   theory/content pages and AI summaries.
-- `docker-compose.yml` starts backend + Postgres only; the frontend runs from
-  the dev server.
 - Simulations run on an ideal channel with optional per-qubit bit-flip noise;
   there is no fiber loss/decoherence model inside the protocol simulators
   themselves (loss appears in the PNS attack model and in the `/keyrate` link
