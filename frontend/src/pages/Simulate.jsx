@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { api, wsUrl } from '../api.js'
 import { useAuth } from '../AuthContext.jsx'
 import ApiKeyInput from '../components/ApiKeyInput.jsx'
+import InfoTip from '../components/InfoTip.jsx'
 import SiteNav from '../components/SiteNav.jsx'
 import { APP_LINKS } from '../components/navLinks.js'
 import './Simulate.css'
@@ -79,7 +80,7 @@ function QberChart({ data }) {
         className="qber-chart__threshold"
       />
       <text x={W - PAD} y={thresholdY - 3} textAnchor="end" className="qber-chart__label">
-        11%
+        11% — abort threshold
       </text>
       <polyline points={points} className="qber-chart__line" />
       {data.map((d, i) => (
@@ -666,6 +667,13 @@ export default function Simulate() {
                 <span className={pnsStats.flagged ? 'data data--abort' : 'data data--live'}>
                   {pnsStats.anomaly_z?.toFixed(1)}σ {pnsStats.flagged ? 'FLAGGED' : 'clean'}
                 </span>
+                <InfoTip label="What does spread vs noise floor mean?">
+                  Loss spread = the gap between the highest and lowest
+                  per-intensity loss rates. An honest channel loses pulses
+                  independent of intensity, so the spread should stay inside
+                  the binomial noise floor; a PNS attacker suppresses pulses
+                  she siphoned, pushing the spread past it (3σ = flagged).
+                </InfoTip>
               </p>
               <ul className="pns-levels">
                 {pnsStats.levels?.map((lvl) => (
@@ -692,13 +700,28 @@ export default function Simulate() {
 
             <dl className="readout-list">
               <div className="readout">
-                <dt>QBER</dt>
+                <dt>
+                  QBER{' '}
+                  <InfoTip label="What is QBER?">
+                    Quantum Bit Error Rate: the fraction of sample bits where
+                    Alice and Bob disagree. Noise and eavesdropping both raise
+                    it.
+                  </InfoTip>
+                </dt>
                 <dd className={`data ${aborted ? 'data--abort' : qberPct ? 'data--live' : ''}`}>
                   {qberPct ? `${qberPct}%` : '—'}
                 </dd>
               </div>
               <div className="readout">
-                <dt>threshold</dt>
+                <dt>
+                  threshold{' '}
+                  <InfoTip label="Why 11%?">
+                    Above ~11% QBER the observed errors can no longer be
+                    explained by honest noise, so Alice and Bob must assume
+                    Eve holds enough information that privacy amplification
+                    cannot remove it — the channel is assumed compromised.
+                  </InfoTip>
+                </dt>
                 <dd className="data">
                   {(QBER_THRESHOLD * 100).toFixed(0)}
                   <span className="unit"> %</span>

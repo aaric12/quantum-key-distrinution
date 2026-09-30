@@ -313,6 +313,57 @@
   font-size: var(--fs-micro);
 }
 
+/* ---- Inline educational tooltip -------------------------------------------- */
+/* Lab-instrument styling: hairline bubble on ink, mono "i" chip. Opens on
+   hover/focus/click (see InfoTip.jsx). Z above card content, below nav. */
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  margin-left: var(--space-1);
+}
+
+.info-tip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: var(--border-hairline);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--grey-400);
+  font-family: var(--font-data);
+  font-size: 8px;
+  line-height: 1;
+  cursor: help;
+}
+
+.info-tip__icon:hover,
+.info-tip__icon:focus-visible {
+  color: var(--live-400);
+  border-color: var(--live-500);
+}
+
+.info-tip__bubble {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 210px;
+  padding: var(--space-2);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  background: var(--ink-900);
+  color: var(--text-hi);
+  font-family: var(--font-body);
+  font-size: var(--fs-micro);
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  z-index: var(--z-raised);
+}
+
 /* ---- Abort note / errors -------------------------------------------------- */
 .abort-note {
   margin-top: var(--space-3);
